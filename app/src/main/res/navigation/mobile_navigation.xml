@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mobile_navigation"
+    app:startDestination="@id/nav_folder">
+
+    <fragment
+        android:id="@+id/nav_item"
+        android:name="com.example.encryptsms.ui.item.ItemFragment"
+        android:label="@string/menu_item"
+        tools:layout="@layout/fragment_item" />
+
+    <fragment
+        android:id="@+id/nav_folder"
+        android:name="com.example.encryptsms.ui.folder.FolderFragment"
+        android:label="@string/menu_folders"
+        tools:layout="@layout/fragment_folder" />
+
+    <fragment
+        android:id="@+id/nav_about"
+        android:name="com.example.encryptsms.ui.about.AboutFragment"
+        android:label="@string/menu_nav_about"
+        tools:layout="@layout/fragment_link_about" />
+</navigation>
