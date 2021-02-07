@@ -10,7 +10,7 @@ import androidx.lifecycle.ViewModel
 class AboutViewModel : ViewModel() {
 
     private val _text = MutableLiveData<String>().apply {
-        value = "Balance Book 2020 \nCreated for class project MSSE 655 \n\nCreated by: Lucas Olson"
+        value = "Encrypt SMS 2021 \nCreated for class project MSSE 692 \n\nCreated by: Lucas Olson"
     }
     val text: LiveData<String> = _text
 }

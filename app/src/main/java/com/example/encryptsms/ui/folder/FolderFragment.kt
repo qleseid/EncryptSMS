@@ -74,7 +74,7 @@ class FolderFragment : Fragment() {
 
         setupRecyclerView(recyclerView)
         //LiveData for view
-        folderSharedViewModel.items.observe(this, {
+        folderSharedViewModel.items.observe(viewLifecycleOwner, {
             l.d("RecycleView and LiveData observer")
             adapter.submitList(ArrayList(it))
 
@@ -83,7 +83,7 @@ class FolderFragment : Fragment() {
                 total += it[i].amount
             }
 
-            activity?.findViewById<TextView>(R.id.text_total_content)?.text = total.toString()
+            // activity?.findViewById<TextView>(R.id.text_total_content)?.text = total.toString()
         })
 
         l.d("View lifecycle Create: ${this.lifecycle.currentState}")
@@ -92,8 +92,8 @@ class FolderFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         //remove bottom total
-        activity?.findViewById<TextView>(R.id.text_total_content)?.visibility  = View.VISIBLE
-        activity?.findViewById<TextView>(R.id.label_text_content)?.visibility = View.VISIBLE
+        //activity?.findViewById<TextView>(R.id.text_total_content)?.visibility  = View.VISIBLE
+        //activity?.findViewById<TextView>(R.id.label_text_content)?.visibility = View.VISIBLE
         activity?.findViewById<FloatingActionButton>(R.id.fab)?.show()
     }
 
@@ -101,8 +101,8 @@ class FolderFragment : Fragment() {
     override fun onPause() {
         super.onPause()
         //remove bottom total
-        activity?.findViewById<TextView>(R.id.text_total_content)?.visibility  = View.INVISIBLE
-        activity?.findViewById<TextView>(R.id.label_text_content)?.visibility = View.INVISIBLE
+        //activity?.findViewById<TextView>(R.id.text_total_content)?.visibility  = View.INVISIBLE
+        //activity?.findViewById<TextView>(R.id.label_text_content)?.visibility = View.INVISIBLE
         activity?.findViewById<FloatingActionButton>(R.id.fab)?.hide()
     }
 

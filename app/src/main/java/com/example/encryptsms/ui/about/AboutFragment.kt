@@ -23,8 +23,8 @@ class AboutFragment : Fragment() {
     //Send an email variables
     private val emailType: String = "message/rfc822"
     private val emailAddress: String = "lolson002@regis.edu"
-    private val subjectMessage: String = "Balance Book Q&A"
-    private val emailSignature: String = "Sent from Balance Book"
+    private val subjectMessage: String = "Encrypt SMS Q&A"
+    private val emailSignature: String = "Sent from Encrypt SMS"
 
     //Log for when email is sent text
     private val sentEmailLog: String = "Send Email Clicked"
