@@ -16,8 +16,6 @@ import com.example.encryptsms.TitleActivity
  * activities together when their 'about' option was selected. More of a proof of concept
  * and learning experience rather than a useful feature.
  *
- *
- *
  * UPDATE:: This [Fragment] is no longer used, can be safely
  * deleted
  */
