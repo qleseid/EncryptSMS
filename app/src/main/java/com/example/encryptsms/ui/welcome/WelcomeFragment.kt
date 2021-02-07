@@ -3,6 +3,7 @@ package com.example.encryptsms.ui.welcome
 import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
+import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -34,7 +35,7 @@ class WelcomeFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         //Create splash delay
-        Handler().postDelayed({
+        Handler(Looper.getMainLooper()).postDelayed({
             val intent = Intent(context, MainActivity::class.java).apply {
                 putExtra(param1, mainIntentExtra)
             }

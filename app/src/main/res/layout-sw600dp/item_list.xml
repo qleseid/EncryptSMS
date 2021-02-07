@@ -17,7 +17,7 @@ This layout is a two-pane layout for the Items master/detail flow.
 -->
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/item_list"
+        android:id="@+id/conver_list"
         android:name="com.example.masterdetail.ItemListFragment"
         style="@style/RecyclerStyle"
         android:layout_width="245dp"

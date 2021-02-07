@@ -21,8 +21,8 @@ import com.example.encryptsms.ItemDetailFragment
 import com.example.encryptsms.MainSharedViewModel
 import com.example.encryptsms.R
 import com.example.encryptsms.R.id
-import com.example.encryptsms.ui.item.ItemFragment
 import com.example.encryptsms.items.ItemContent
+import com.example.encryptsms.ui.item.ItemFragment
 import com.example.encryptsms.utility.LogMe
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import kotlinx.android.synthetic.main.app_bar_main.*
@@ -70,7 +70,7 @@ class FolderFragment : Fragment() {
             twoPane = true
         }
 
-        recyclerView = view.findViewById<RecyclerView>(R.id.item_list)
+        recyclerView = view.findViewById<RecyclerView>(R.id.conver_list)
 
         setupRecyclerView(recyclerView)
         //LiveData for view
@@ -78,7 +78,7 @@ class FolderFragment : Fragment() {
             l.d("RecycleView and LiveData observer")
             adapter.submitList(ArrayList(it))
 
-            var total: Float = 0.00f
+            var total = 0.00f
             for (i in 0 until it.size){
                 total += it[i].amount
             }

@@ -12,7 +12,7 @@
     <string name="menu_nav_about">About</string>
     <string name="action_about">About</string>
     <string name="title_button">Populate</string>
-    <string name="title_activity_title">TitleActivity</string>
+    <string name="title_activity_title">Encrypt SMS</string>
     <!-- Strings used for fragments for navigation -->
     <string name="welcome_fragment_label">Welcome</string>
     <string name="about_fragment_label">About</string>
@@ -35,4 +35,5 @@
     <string name="enter_amount">Enter amount</string>
     <string name="add_transaction_details_here">Add transaction details here</string>
     <string name="icon_representing_transaction">Icon representing transaction</string>
+    <string name="UnreadCircle">The unread circle indicatro</string>
 </resources>
