@@ -2,7 +2,11 @@
   <dictionary name="gangsta">
     <words>
       <w>balancebook</w>
+      <w>conver</w>
+      <w>convo</w>
       <w>encryptsms</w>
+      <w>interactor</w>
+      <w>msgs</w>
     </words>
   </dictionary>
 </component>

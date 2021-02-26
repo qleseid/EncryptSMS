@@ -1,9 +1,0 @@
-<ImageView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/imageView1"
-    android:layout_width="60dp"
-    android:layout_height="60dp"
-    android:layout_margin="5dp"
-    android:background="#FF9800"
-    android:contentDescription="@string/icon_representing_transaction"
-    tools:src="@tools:sample/avatars" />

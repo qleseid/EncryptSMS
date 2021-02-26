@@ -26,13 +26,17 @@ class ItemContentUnitTest {
         private val firstItem = ItemContent.AppItem(
             "1",
             "First Item",
-            "First item details"
+            "First conversation details",
+            "hell",
+            12.98f
         )
 
         private val secondItem = ItemContent.AppItem(
             "2",
             "Second Item",
-            "Second item details"
+            "Second conversation details",
+            "hell",
+            12.98f
         )
 
     @Test
@@ -46,7 +50,7 @@ class ItemContentUnitTest {
         log("Items size: ${itemPool.size}")
         log(" Item: ${itemPool[0].content}")
 
-        //Test item was added to itemPool
+        //Test conversation was added to itemPool
         assertTrue("Content should be First Item",
             "First Item" == itemPool[0].content)
         assertTrue("Content should be Second Item",
@@ -65,7 +69,7 @@ class ItemContentUnitTest {
         //Prints data during tests
         log("Items size: ${itemPool.size}")
 
-        //Test item was added to itemPool
+        //Test conversation was added to itemPool
         assertTrue("Content should be First Item",
             "First Item" == itemPool[0].content)
 
@@ -91,7 +95,7 @@ class ItemContentUnitTest {
         log("Items size: ${itemPool.size}")
         log(" Item: ${itemPool[0].content}")
 
-        //Test item was added to itemPool
+        //Test conversation was added to itemPool
         assertTrue("Content should be First Item",
             "First Item" == itemPool[0].content)
         assertTrue("Content should be Second Item",

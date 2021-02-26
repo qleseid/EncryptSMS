@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?attr/selectableItemBackground">
+
+    <TextView
+        android:id="@+id/timestamp"
+        style="@style/TextSecondary"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:padding="8dp"
+        android:textSize="8sp"
+        app:layout_constraintEnd_toStartOf="@id/sim"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="01/24/21 13:34" />
+
+    <ImageView
+        android:id="@+id/sim"
+        android:layout_width="16dp"
+        android:layout_height="16dp"
+        android:layout_marginEnd="2dp"
+        android:contentDescription="TODO"
+        android:src="@drawable/ic_sim_card_black_24dp"
+        app:layout_constraintBottom_toBottomOf="@id/timestamp"
+        app:layout_constraintEnd_toStartOf="@id/simIndex"
+        app:layout_constraintStart_toEndOf="@id/timestamp"
+        app:layout_constraintTop_toTopOf="@id/timestamp"
+        app:tint="?android:attr/textColorSecondary" />
+
+    <TextView
+        android:id="@+id/simIndex"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="?android:attr/textColorSecondary"
+        android:textSize="8sp"
+        app:layout_constraintBottom_toBottomOf="@id/timestamp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/sim"
+        app:layout_constraintTop_toTopOf="@id/timestamp"
+        tools:ignore="SmallSp"
+        tools:text="1" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/attachments"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:nestedScrollingEnabled="false"
+        android:orientation="vertical"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        app:layout_constrainedWidth="true"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/timestamp"
+        tools:itemCount="1"
+        tools:listitem="@layout/mms_preview_list_item"
+        tools:targetApi="lollipop" />
+
+    <ImageView
+        android:id="@+id/avatar"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:layout_marginStart="12dp"
+        android:contentDescription="TODO"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@id/body"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <com.example.encryptsms.utility.widget.TightTextView
+        android:id="@+id/body"
+        style="@style/TextPrimary"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="2dp"
+        android:layout_marginEnd="60dp"
+        android:autoLink="email|phone|web"
+        android:background="@drawable/message_only"
+        android:gravity="start|center_vertical"
+        android:minHeight="36dp"
+        app:layout_constrainedWidth="true"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toEndOf="@id/avatar"
+        app:layout_constraintTop_toBottomOf="@id/attachments"
+        app:layout_constraintWidth_max="384dp"
+        tools:backgroundTint="@color/tools_theme"
+        tools:text="@tools:sample/lorem" />
+
+    <ProgressBar
+        android:id="@+id/cancel"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        tools:ignore="MissingConstraints" />
+
+    <TextView
+        android:id="@+id/status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="start"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="4dp"
+        android:textColor="?android:attr/textColorSecondary"
+        android:textSize="8sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/body"
+        tools:ignore="SmallSp,SpUsage"
+        tools:text="Sending..." />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
