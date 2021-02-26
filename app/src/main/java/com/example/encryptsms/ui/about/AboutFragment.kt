@@ -5,20 +5,24 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.*
-import android.widget.Button
-import android.widget.TextView
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
 import com.example.encryptsms.R
+import com.example.encryptsms.databinding.FragmentAboutBinding
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 
 /**
- * The About [Fragment] in the nav drawered welcome activity.
+ * The About [Fragment] in the nav drawer welcome activity.
  * TODO:: Move fragment to main activity when slash screen is complete in welcome activity.
  */
 class AboutFragment : Fragment() {
 
-    private lateinit var aboutViewModel: AboutViewModel
+    // Binding view
+    private var _binding: FragmentAboutBinding? = null
+    private val binding get() = _binding!!
+
+    private val aboutViewModel: AboutViewModel by viewModels()
 
     //Send an email variables
     private val emailType: String = "message/rfc822"
@@ -33,21 +37,25 @@ class AboutFragment : Fragment() {
     private val emailChooserText: String = "Email Developer"
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
+        inflater: LayoutInflater,
+        container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
-        aboutViewModel =
-            ViewModelProviders.of(this).get(AboutViewModel::class.java)
-        val root = inflater.inflate(R.layout.fragment_about, container, false)
-        val textView: TextView = root.findViewById(R.id.textview_second)
+
+        // Bindings
+        _binding = FragmentAboutBinding.inflate(inflater, container, false)
+        val rootView = binding.root
+
         aboutViewModel.text.observe(viewLifecycleOwner, Observer {
-            textView.text = it
+            binding.textviewSecond.text = it
         })
-        return root
+        return rootView
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    override fun onViewCreated(
+        view: View,
+        savedInstanceState: Bundle?
+    ) {
         super.onViewCreated(view, savedInstanceState)
 
         // Show the Up button in the action bar.
@@ -56,9 +64,11 @@ class AboutFragment : Fragment() {
         //in the activity instead.
         setHasOptionsMenu(true)
 
+        // Hide the Floating Button in this Fragment
+        activity?.findViewById<FloatingActionButton>(R.id.fab)?.hide()
 
         //Send email to me for comments or questions
-        view.findViewById<Button>(R.id.button_second).setOnClickListener {
+        binding.buttonSecond.setOnClickListener {
 //            findNavController().navigate(R.id.action_SecondFragment_to_FirstFragment)
             val intent = Intent(Intent.ACTION_SEND).apply {
                 type = emailType
@@ -79,8 +89,17 @@ class AboutFragment : Fragment() {
         }
     }
 
+    override fun onDestroyView()
+    {
+        super.onDestroyView()
+        _binding = null
+    }
+
     @Override
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+    override fun onCreateOptionsMenu(
+        menu: Menu,
+        inflater: MenuInflater
+    ) {
         super.onCreateOptionsMenu(menu, inflater)
         menu.findItem(R.id.action_home).isVisible = false
         menu.findItem(R.id.action_about).isVisible = false

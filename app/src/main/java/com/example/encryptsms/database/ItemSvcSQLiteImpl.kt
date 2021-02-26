@@ -135,7 +135,7 @@ class ItemSvcSQLiteImpl(_context: Context): SQLiteOpenHelper(_context, DB_NAME,n
         }
 
         //Insert the new row, returns primary key value: -1 if error
-        val newRowId = wdb?.insert(ItemSQLiteContract.ItemEntry.TABLE_NAME, null, value)
+        val newRowId = wdb.insert(ItemSQLiteContract.ItemEntry.TABLE_NAME, null, value)
 
         //Close database
         wdb.close()
@@ -156,7 +156,7 @@ class ItemSvcSQLiteImpl(_context: Context): SQLiteOpenHelper(_context, DB_NAME,n
         //Get readable database
         rdb = this.readableDatabase
 
-        //Put item values in content
+        //Put conversation values in content
         val value = ContentValues().apply {
             put(ItemSQLiteContract.ItemEntry.COLUMN_NAME_CONTENT, item.content)
             put(ItemSQLiteContract.ItemEntry.COLUMN_NAME_DETAILS, item.details)

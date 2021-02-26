@@ -24,4 +24,11 @@
         android:orderInCategory="10"
         android:title="@string/action_about"
         app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_settings"
+        android:icon="@drawable/ic_menu_manage"
+        android:orderInCategory="11"
+        android:title="@string/menu_action_settings"
+        app:showAsAction="never" />
 </menu>

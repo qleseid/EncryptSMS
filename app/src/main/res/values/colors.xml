@@ -6,6 +6,10 @@
 
     <color name="item_color_accent">#CA1017</color>
 
+
+    <color name="messageBubbleIn">#FF4CDBE8</color>
+    <color name="messageBubbleOut">#E6C150</color>
+
         <color name="white">#FFFFFF</color>
         <color name="black">#000000</color>
 

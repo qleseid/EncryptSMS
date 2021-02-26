@@ -3,31 +3,77 @@ package com.example.encryptsms.data.receiver
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.os.Build
-import android.provider.Telephony.Sms.Intents.getMessagesFromIntent
-import androidx.annotation.RequiresApi
-import com.example.encryptsms.domain.interactor.ReceiveSms
+import android.provider.Telephony
+import android.telephony.SmsMessage
+import com.example.encryptsms.data.manager.SmsManager
 import com.example.encryptsms.utility.LogMe
-import dagger.android.AndroidInjection
-import javax.inject.Inject
 
-class SmsReceiver: BroadcastReceiver() {
-
-    @Inject lateinit var receiveMessage: ReceiveSms
-
+class SmsReceiver: BroadcastReceiver()
+{
     //Logger
-    private var l = LogMe()
+    var l = LogMe()
 
-    @RequiresApi(Build.VERSION_CODES.KITKAT)
-    override fun onReceive(context: Context, intent: Intent) {
-        AndroidInjection.inject(this, context)
-        l.d("onReceive")
+    // Bundle string
+    val SMS_BUNDLE = "pdus"
 
-        getMessagesFromIntent(intent)?.let { messages ->
-            val subId = intent.extras?.getInt("subscription", -1) ?: -1
+    override fun onReceive(
+        context: Context?,
+        intent: Intent?
+    ) {
+        //TODO: Finish adding where the received will go.
+        l.d("SMS RECEIVER: ON RECEIVE: ${context.toString()}")
+
+        Telephony.Sms.Intents.getMessagesFromIntent(intent)?.let {
+            val subId = intent?.extras?.getInt("subscription", -1) ?: -1
 
             val pendingResult = goAsync()
-            receiveMessage.execute(ReceiveSms.Params(subId, messages)) { pendingResult.finish() }
+
+            val thread = Thread{
+                run {
+                    l.d("SMS RECEIVER: Receive Thread")
+                    receiveSms(subId, it, context)
+                    pendingResult.resultCode = 1
+                    pendingResult.finish()
+                }
+            }
+            thread.start()
         }
     }
+
+    private fun receiveSms(subId: Int, messages: Array<SmsMessage>, context: Context?)
+    {
+        if (messages.isNotEmpty())
+        {
+            val add = messages[0].displayOriginatingAddress
+            val time = messages[0].timestampMillis
+            val body = messages
+                .mapNotNull {msgs -> msgs.displayMessageBody }
+                .reduce{body, new -> body + new}
+            val smsM = context?.let { SmsManager(it) }
+            if (smsM!!.insertRecSms(subId, add, body, time))
+            {
+                l.d("SMS RECEIVE: INSERT SUCCESS")
+            }
+        }
+    }
+    /*
+        @Inject lateinit var receiveMessage: ReceiveSms
+
+        //Logger
+
+        @RequiresApi(Build.VERSION_CODES.KITKAT)
+        override fun onReceive(context: Context, intent: Intent) {
+            AndroidInjection.inject(this, context)
+            l.d("onReceive")
+
+            getMessagesFromIntent(intent)?.let { messages ->
+                val subId = intent.extras?.getInt("subscription", -1) ?: -1
+
+                val pendingResult = goAsync()
+                receiveMessage.execute(ReceiveSms.Params(subId, messages)) { pendingResult.finish() }
+            }
+        }
+
+     */
+
 }

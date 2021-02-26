@@ -7,8 +7,8 @@
     <string name="nav_header_desc">Text Nav</string>
     <string name="action_home">Home</string>
 
-    <string name="menu_item">New Item</string>
-    <string name="menu_folders">Folder</string>
+    <string name="menu_conversation">Conversation</string>
+    <string name="menu_threads">Threads</string>
     <string name="menu_nav_about">About</string>
     <string name="action_about">About</string>
     <string name="title_button">Populate</string>
@@ -23,10 +23,10 @@
     <string name="hello_about_fragment">Hello second fragment. Arg: %1$s</string>
     <string name="menu_welcome">Welcome</string>
     <string name="menu_about">About</string>
-    <string name="title_item_detail">Item Detail</string>
+    <string name="title_conversation_detail">Conversation Detail</string>
     <string name="menu_nav_vis">Action Bar On</string>
     <string name="action_no_vis">Action Bar Off</string>
-    <string name="activity_folder">Folder</string>
+    <string name="activity_threads">Threads</string>
     <string name="message">Text Display</string>
     <string name="total">Total:</string>
     <string name="item_totals_label">Item totals label</string>
@@ -35,7 +35,7 @@
     <string name="enter_amount">Enter amount</string>
     <string name="add_transaction_details_here">Add transaction details here</string>
     <string name="icon_representing_transaction">Icon representing transaction</string>
-    <string name="UnreadCircle">The unread circle indicatro</string>
+    <string name="UnreadCircle">The unread circle indicator</string>
 
     <string name="compose_number_picker_title">Choose a phone number</string>
     <string name="compose_number_picker_default">%s ∙ Default</string>
@@ -79,4 +79,9 @@
     <string name="compose_sim_changed_toast">SIM %1$d (%2$s) selected</string>
     <string name="compose_sim_cd">%s selected, change SIM card</string>
     <string name="compose_send_cd">Send message</string>
+    <string name="no_status">No Status</string>
+    <string name="status_sent">Sent</string>
+    <string name="status_pending">Pending...</string>
+    <string name="status_failed">FAILED!</string>
+    <string name="menu_action_settings">Settings</string>
 </resources>

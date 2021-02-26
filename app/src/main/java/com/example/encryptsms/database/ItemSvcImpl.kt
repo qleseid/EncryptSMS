@@ -3,10 +3,12 @@ package com.example.encryptsms.database
 import android.content.Context
 import com.example.encryptsms.items.ItemContent
 import com.example.encryptsms.utility.LogMe
-import java.io.*
+import java.io.File
+import java.io.ObjectInputStream
+import java.io.ObjectOutputStream
 
 /**
- * Service to store item data to a local file
+ * Service to store conversation data to a local file
  */
 class ItemSvcImpl(_context: Context): IItemSvc {
 
@@ -36,7 +38,7 @@ class ItemSvcImpl(_context: Context): IItemSvc {
                 tempList.add(i, createAppItem(i))
             }
 
-            //Create an item to throw away during list creation
+            //Create an conversation to throw away during list creation
             val ti = tempList[0]
             ti.id = "delete"
             tempList = addItem(ti, tempList)
@@ -46,7 +48,7 @@ class ItemSvcImpl(_context: Context): IItemSvc {
         return tempList
     }
 
-    //Create a new item
+    //Create a new conversation
     override fun create(item: ItemContent.AppItem): Boolean {
 
         //Return boolean if operation was successful
@@ -56,10 +58,10 @@ class ItemSvcImpl(_context: Context): IItemSvc {
         var tempList = readFile()
 
         if (tempList != null) {
-            //Add the item and return the list
+            //Add the conversation and return the list
             tempList = addItem(item, tempList)
         } else{
-            l.e("ITEMSVC::CREATE failed to add item")
+            l.e("ITEMSVC::CREATE failed to add conversation")
         }
 
 
@@ -72,7 +74,7 @@ class ItemSvcImpl(_context: Context): IItemSvc {
         return br
     }
 
-    //Update an existing item
+    //Update an existing conversation
     override fun update(item: ItemContent.AppItem): Boolean {
 
         //Return boolean if operation was successful
@@ -82,10 +84,10 @@ class ItemSvcImpl(_context: Context): IItemSvc {
         val tempList = readFile()
 
         if (tempList != null) {
-            //update the item at it's position
+            //update the conversation at it's position
             tempList[(item.id.toInt() - 1)] = item
         } else{
-            l.e("ITEMSVC::UPDATE failed to update item")
+            l.e("ITEMSVC::UPDATE failed to update conversation")
         }
         if (tempList != null) {
             //write list to file
@@ -96,25 +98,25 @@ class ItemSvcImpl(_context: Context): IItemSvc {
         return br
     }
 
-    //Delete an item
+    //Delete an conversation
     override fun delete(item: ItemContent.AppItem): Boolean {
         //Return boolean if operation was successful
         var br = false
 
-        //read in list from file to delete item
+        //read in list from file to delete conversation
         var tempList = readFile()
 
         if (tempList != null) {
-            //Delete the item and return the list
+            //Delete the conversation and return the list
             tempList.removeAt(item.id.toInt())
 
-            //Change ID to delete so add item knows to skip it
+            //Change ID to delete so add conversation knows to skip it
             item.id = "delete"
 
             //Add Items back to list to restructure ID
             tempList = addItem(item, tempList)
         } else{
-            l.e("ITEMSVC::DELETE failed to delete item")
+            l.e("ITEMSVC::DELETE failed to delete conversation")
         }
 
 
@@ -177,7 +179,7 @@ class ItemSvcImpl(_context: Context): IItemSvc {
         return boolResult
     }
 
-    //Adds an item to the ArrayList
+    //Adds an conversation to the ArrayList
     private fun addItem(item: ItemContent.AppItem,
                         list: ArrayList<ItemContent.AppItem>):
             ArrayList<ItemContent.AppItem>{
@@ -205,7 +207,7 @@ class ItemSvcImpl(_context: Context): IItemSvc {
             val ts = tempList.size
             val temp = ts + 1
 
-            //Add item to end
+            //Add conversation to end
             item.id = temp.toString()
             item.content = "Item $temp"
             tempList.add(ts, item)
@@ -216,7 +218,7 @@ class ItemSvcImpl(_context: Context): IItemSvc {
     }
 
 
-    //Creates a sample item if needed
+    //Creates a sample conversation if needed
     private fun createAppItem(position: Int): ItemContent.AppItem {
         return ItemContent.AppItem(
             position.toString(),
@@ -226,7 +228,7 @@ class ItemSvcImpl(_context: Context): IItemSvc {
             12.57f)
     }
 
-    //Creates the sample details if needed; repeats string for item position #
+    //Creates the sample details if needed; repeats string for conversation position #
     private fun makeDetails(position: Int): String {
         val builder = StringBuilder()
         builder.append("Details about Item: ").append(position)

@@ -1,4 +1,4 @@
-package com.example.encryptsms.ui.folder
+package com.example.encryptsms.ui.threads
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
@@ -9,7 +9,7 @@ import com.example.encryptsms.utility.LogMe
 import java.io.Serializable
 
 //TODO:: working on persisting data here
-class FolderViewModel(application: Application
+class ThreadViewModel(application: Application
 ): AndroidViewModel(application), Serializable {
 
     //Context of activity
@@ -23,7 +23,7 @@ class FolderViewModel(application: Application
 
     lateinit var items: MutableList<ItemContent.AppItem>
 
-    //Create a new item:: this is only a generic item for now
+    //Create a new conversation:: this is only a generic conversation for now
     fun createItem(){
 
         //Create instance to save items to file
@@ -31,7 +31,7 @@ class FolderViewModel(application: Application
         itemDoa.create(ItemContent.AppItem(
             "9",
             (System.nanoTime() * .00000001).toString(),
-            "Button created item and this is the system nano time: ${System.nanoTime() * .00000001}",
+            "Button created conversation and this is the system nano time: ${System.nanoTime() * .00000001}",
             "@drawable/handyman_black_24dp",
             12.57f))
     }
