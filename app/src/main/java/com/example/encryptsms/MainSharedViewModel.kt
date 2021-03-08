@@ -1,6 +1,7 @@
 package com.example.encryptsms
 
 import android.app.Application
+import android.net.Uri
 import android.provider.Telephony
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
@@ -10,6 +11,7 @@ import com.example.encryptsms.data.model.Phone
 import com.example.encryptsms.data.model.Sms
 import com.example.encryptsms.items.ItemContent
 import com.example.encryptsms.repository.ItemRepository
+import com.example.encryptsms.utility.CryptoMagic
 import com.example.encryptsms.utility.LogMe
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -24,6 +26,9 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
 
     // SMS permission request
     private val READ_SMS_PERMISSIONS_REQUEST = 1
+
+    // SMS URI
+    private val SMS_CONTENT_URI: Uri = Uri.parse("content://sms")
 
     // Threads
     private var _threads: MutableLiveData<ArrayList<Sms.AppSmsShort>?> = MutableLiveData()
@@ -45,12 +50,16 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
     val itemsMap: LiveData<MutableMap<String, Int>>
             get() = _itemsMap
 
-    private var _change: MutableLiveData<Boolean> = MutableLiveData(false)
-    val change: LiveData<Boolean>
-        get() = _change
+    private var _encryptSwitch: MutableLiveData<Boolean> = MutableLiveData(false)
+    val encSwitch: LiveData<Boolean>
+        get() = _encryptSwitch
+
 
     lateinit var tempSms: Sms.AppSmsShort
     lateinit var draftSms: Sms.AppSmsShort
+
+
+    private val smsM = com.example.encryptsms.data.manager.SmsManager(context)
 
     lateinit var draft: Telephony.Mms.Draft
     //Logger
@@ -61,44 +70,52 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
 
     init
     {
-        l.d("MAIN SHARED VIEW MODEL: init method")
-
         //Get all messages
         getAllThreads()
         clearTemp()
     }
 
     /**
+     * SET ENCRYPTED TOGGLE
+     */
+    fun setEncryptedToggle(bool: Boolean)
+    {
+        _encryptSwitch.postValue(bool)
+    }
+
+    /**
      * REFRESH THREADS
      */
-    fun refresh()
+    fun refresh( select: Int)
     {
-        l.d("MAIN SHARED VIEW MODEL: REFRESH")
-
-        getAllThreads()
-        getAllMessages()
+        when(select)
+        {
+            0 -> getAllThreads() // 0 = refresh the threads
+            1 -> getAllMessages()
+        }
     }
 
     /**
      * ADD MESSAGE
      */
-    fun addMsgToConvo(msg: String)
+    fun sendSmsMessage(msg: String)
     {
         var data = ArrayList<Sms.AppSmsShort>()
         // Creates shallow copy of objects
         _messages.value?.let { data = it.clone() as ArrayList<Sms.AppSmsShort> }
 
-        // Debug
-        if (data != null)
+        // Encrypt message if switch is set
+        if(encSwitch.value!!)
         {
-            for (i in data)
-            {
-                l.d("LOOP IN MESSAGE: ${i.body}")
-            }
+            tempSms.body = CryptoMagic.encrypt(msg)
+        }
+        else
+        {
+            tempSms.body = msg
         }
 
         // Build the message
-        tempSms.body = msg
+        tempSms.read = 1
         tempSms.status = 0
         tempSms.type = 2
         tempSms.date = System.currentTimeMillis()
@@ -108,11 +125,15 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
         // Copy to make new object: fixes reference copy issues
         draftSms = tempSms.copy()
 
-        // Add to end of list
-        data.add(data.lastIndex+1, draftSms)
+        if (smsM.sendMessage(draftSms, SMS_CONTENT_URI))
+        {
+            l.d("SHARE SEND SMS SUCCESS!")
+            // Add to end of list
+            data.add(data.lastIndex + 1, draftSms)
 
-        // Populate messages live data to refresh recycler
-        _messages.postValue(data)
+            // Populate messages live data to refresh recycler
+            _messages.postValue(data)
+        }
     }
 
     /**
@@ -120,47 +141,27 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
      */
     fun getAllMessages()
     {
-
-        l.d("MAIN SHARED VIEW MODEL: Get All Messages")
         val data = ArrayList<Sms.AppSmsShort>()
 
         // Create a new coroutine to move execution off of UI thread
         viewModelScope.launch(Dispatchers.IO) {
 
-            l.d("MAIN SHARED VIEW MODEL: Get All Messages_coroutine method")
-            var smsM = com.example.encryptsms.data.manager.SmsManager(context)
-
             // Use thread ID and address to get all the messages
             smsM.getSms(arrayListOf(
                 Phone(tempSms.thread_id.toString(), tempSms.address)))?.let { data.addAll(it) }
-//            smsM.getConvoThreads()?.let { data.addAll(it) }
 
-            l.d("GET ALL MESSAGES: DATA SIZE:: ${data.size}")
+            for ((con, d) in data.withIndex())
+            {
+                l.d("DECRYPTING START: ${d.body}")
+                if (encSwitch.value!! && d.type == 2)
+                {
+                    data[con].body = CryptoMagic.decrypt(d.body)
+                }
+                l.d("DECRYPTING END: ${data[con].body}")
+            }
 
             _messages.postValue(data)
         }
-
-
-//        val temp = _change.value
-//        _change.value = _change.value.let { !it!! }
-//
-//        //Get size of the items array
-//        val itemS = _items.value?.size?.plus(1)
-//
-//        //New Item
-//        val newItem = ItemContent.AppItem(
-//            itemS.toString(),
-//            "Item $temp",
-//            "Button created conversation and this is the system nano time: ${System.nanoTime() * .00000001}",
-//            "handyman_black_24dp",
-//            12.57f
-//        )
-//
-//        _items.value?.add(newItem)
-//        //Have to post to trigger the Observer
-//        _items.postValue(_items.value)
-//
-//        l.d("Change: ${temp} ${_change.value}")
     }
 
     /**
@@ -168,43 +169,29 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
      */
     private fun getAllThreads()
     {
-        l.d("MAIN SHARED VIEW MODEL: Get All THREADS")
         val data = ArrayList<Sms.AppSmsShort>()
 
         //Create a new coroutine to move execution off of UI thread
         viewModelScope.launch(Dispatchers.IO) {
 
-            l.d("MAIN SHARED VIEW MODEL: Get All Threads_coroutine method")
-            var smsM = com.example.encryptsms.data.manager.SmsManager(context)
-
-//            smsM.getLastSms()?.let { data.addAll(it) }
             smsM.getConvoThreads()?.let { data.addAll(it) }
-
-            l.d("GET ALL THREADS: DATA SIZE:: ${data.size}")
 
             _threads.postValue(data)
         }
     }
 
     /**
-     * GET ALL ITEMS
+     * FIND THREAD ID
      */
-    private fun getAllItems()
+    fun findThreadId()
     {
 
-//        l.d("MAIN SHARED VIEW MODEL: Get All ITEMS method")
-//        //Create a new coroutine to move execution off of UI thread
-//        viewModelScope.launch {
-//
-//            l.d("MAIN SHARED VIEW MODEL: GetAllITEMS_Coroutine method")
-//            _items.postValue(itemRep.getAll())
-//
-//            l.d("GET ALL ITEMS: SIZE:: ${items.value?.size}")
-//            l.d("GET ALL _ITEMS: SIZE:: ${_items.value?.size}")
-//            //Update hash map of items
-//            hashMap()
-//        }
-
+        val res = smsM.getThreadId(tempSms.address)
+        if (res > -1L)
+        {
+            tempSms.thread_id = res
+            getAllMessages()
+        }
     }
 
     /**

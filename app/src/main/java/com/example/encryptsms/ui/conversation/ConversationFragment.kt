@@ -2,6 +2,7 @@ package com.example.encryptsms.ui.conversation
 
 import android.content.Context
 import android.os.Bundle
+import android.telephony.PhoneNumberUtils
 import android.telephony.SmsManager
 import android.util.Log
 import android.view.*
@@ -12,11 +13,14 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.example.encryptsms.MainActivity
 import com.example.encryptsms.MainSharedViewModel
 import com.example.encryptsms.R
+import com.example.encryptsms.data.livedata.ReceiveNewSms
 import com.example.encryptsms.data.model.Sms
 import com.example.encryptsms.databinding.ActivityConversationDetailBinding
 import com.example.encryptsms.utility.LogMe
@@ -49,16 +53,9 @@ class ConversationFragment : Fragment() {
         savedInstanceState: Bundle?
     ) {
         super.onCreate(savedInstanceState)
-//        activity?.findViewById<Toolbar>(R.id.toolbar)?.title = ("Convo")
-
-        //Debug
-        l.d("Conversation: On Create")
 
         arguments?.let {
             if (it.containsKey(ARG_ITEM_ID)) {
-                // Load the contacts content specified by the fragment
-                // arguments. In a real-world scenario, use a Loader
-                // to load content from a content provider.
                 val tThread = it.getSerializable(ARG_ITEM_ID) as Sms.AppSmsShort
 
                 // Store thread info from clicked thread
@@ -67,8 +64,6 @@ class ConversationFragment : Fragment() {
 
                 // Get all the messages attached to the tempSms address
                 convoSharedViewModel.getAllMessages()
-
-                l.d("Conversation Frag SMS arg data: ${convoSharedViewModel.tempSms}")
             }
         }
     }
@@ -83,9 +78,6 @@ class ConversationFragment : Fragment() {
         _binding = ActivityConversationDetailBinding.inflate(inflater, container, false)
         val rootView = binding.root
 
-        //Debug
-        l.d("Conversation: On Create View")
-
         //Allow fragment to hide toolbar items
         setHasOptionsMenu(true)
 
@@ -95,28 +87,28 @@ class ConversationFragment : Fragment() {
         // Show the items content as text in a TextView.
         convoSharedViewModel.tempSms.let {
 //            binding.toolbarTitle.text = it.address
-            activity?.findViewById<Toolbar>(R.id.toolbar)?.title = it.address
+            activity?.findViewById<Toolbar>(R.id.toolbar)?.title = PhoneNumberUtils.formatNumber(it.address)
+        }
+
+        activity?.findViewById<Toolbar>(R.id.toolbar)?.setOnClickListener{
+            (activity as MainActivity).showAlertWithTextInput()
         }
 
         binding.send.setOnClickListener{
 
             val msg = binding.message.text.toString()
-            l.d("Conversation: Message Sent to: " +
-                    "${convoSharedViewModel.tempSms.address} with: " +
-                   msg)
 
-            smsMang.sendTextMessage(
-                convoSharedViewModel.tempSms.address,
-                null,
-                 msg,
-                null,
-                null)
+            // Send the message
+            convoSharedViewModel.sendSmsMessage(msg)
 
-            convoSharedViewModel.addMsgToConvo(msg)
+            // Cleanup the view
             binding.message.text.clear()
             val keyBoard = context?.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
             keyBoard.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0)
         }
+
+        // Sets the LiveData an triggers switch to return to set state in Main Activity Menu
+        convoSharedViewModel.setEncryptedToggle(convoSharedViewModel.encSwitch.value!!)
 
         return rootView
     }
@@ -127,20 +119,25 @@ class ConversationFragment : Fragment() {
     ) {
         super.onViewCreated(view, savedInstanceState)
 
-        //Debug
-        l.d("Conversation: On View Created")
-
         // Bind layout to recycler
         recyclerView = binding.messageList
 
+        // Observe data changes from Broadcast Receiver
+        ReceiveNewSms.get().observe(viewLifecycleOwner, Observer<Boolean> {
+            if (it)
+            {
+                convoSharedViewModel.refresh(1)
+                convoSharedViewModel.refresh(0)
+                ReceiveNewSms.set(false)
+            }
+        })
+
         //LiveData for RecyclerView
         convoSharedViewModel.messages.observe(viewLifecycleOwner, {
-            l.d("Conversation: RecycleView and LiveData observer ${adapter.itemCount}")
 
             // Submit recycler the changed list items
             adapter.submitList(ArrayList(it), kotlinx.coroutines.Runnable {
                 kotlin.run {
-                    l.w("@@@@@@@@@@@@@@ IN RUNNABLE @@@@@@@@@@@@@@@@@")
                     recyclerView.scrollToPosition(adapter.itemCount - 1)
                 }
             })
@@ -154,9 +151,6 @@ class ConversationFragment : Fragment() {
             override fun onChanged()
             {
                 super.onChanged()
-
-                l.d("Conversation: Adapter ${recyclerView.verticalScrollbarPosition} Observer ***************${adapter
-                    .itemCount}")
                 recyclerView.scrollToPosition(adapter.itemCount - 1)
             }
         })
@@ -172,6 +166,10 @@ class ConversationFragment : Fragment() {
     @Override
     override fun onPause() {
         super.onPause()
+
+        // Remove listener when Fragment isn't active
+        activity?.findViewById<Toolbar>(R.id.toolbar)?.setOnClickListener(null)
+
         // Debug
         l.d("Conversation: On Pause")
     }
@@ -309,9 +307,6 @@ class ConversationFragment : Fragment() {
             Toast.makeText(parentActivity.context, icon, Toast.LENGTH_SHORT).show()
             this.notifyDataSetChanged()
             return true
-//            var _icon = icon
-//            folderSharedViewModel.tempSms.icon = _icon
-//            Log.d("SET ICON RECYCLER","Set Icon Item Fragment: $_icon ${folderSharedViewModel.tempSms.hashCode()}")
         }
     }
 
@@ -338,12 +333,5 @@ class ConversationFragment : Fragment() {
          * represents.
          */
         const val ARG_ITEM_ID = "item_id"
-    }
-
-    /**
-     * SEND MESSAGE BUTTON
-     */
-    fun sendMessage(view: View){
-
     }
 }

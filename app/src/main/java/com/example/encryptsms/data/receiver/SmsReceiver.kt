@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.provider.Telephony
 import android.telephony.SmsMessage
+import com.example.encryptsms.data.livedata.ReceiveNewSms
 import com.example.encryptsms.data.manager.SmsManager
 import com.example.encryptsms.utility.LogMe
 
@@ -53,27 +54,8 @@ class SmsReceiver: BroadcastReceiver()
             if (smsM!!.insertRecSms(subId, add, body, time))
             {
                 l.d("SMS RECEIVE: INSERT SUCCESS")
+                ReceiveNewSms.set(true)
             }
         }
     }
-    /*
-        @Inject lateinit var receiveMessage: ReceiveSms
-
-        //Logger
-
-        @RequiresApi(Build.VERSION_CODES.KITKAT)
-        override fun onReceive(context: Context, intent: Intent) {
-            AndroidInjection.inject(this, context)
-            l.d("onReceive")
-
-            getMessagesFromIntent(intent)?.let { messages ->
-                val subId = intent.extras?.getInt("subscription", -1) ?: -1
-
-                val pendingResult = goAsync()
-                receiveMessage.execute(ReceiveSms.Params(subId, messages)) { pendingResult.finish() }
-            }
-        }
-
-     */
-
 }

@@ -3,6 +3,7 @@ package com.example.encryptsms.data.manager
 import android.content.Context
 import android.net.Uri
 import android.provider.Telephony
+import android.telephony.SmsManager
 import androidx.core.content.contentValuesOf
 import com.example.encryptsms.data.model.Phone
 import com.example.encryptsms.data.model.Sms
@@ -64,10 +65,112 @@ class SmsManager
         return res
     }
 
+    fun getThreadId(address: String): Long
+    {
+        var succ = -1L
+        val res: ArrayList<Sms.AppSmsShort>? = ArrayList()
+        val where = "address = $address"
+        if (res != null) {
+            getAllSms(where)?.let {
+                res.addAll(it)
+            }
+        }
+
+        if (res?.size!! > 0)
+        {
+            l.d("SMS-MANAGER: GET THREAD ID ${res.size} ${res[0].thread_id}")
+            succ = res[0].thread_id
+        }
+
+        return succ
+    }
+
+    /**
+     * SEND SMS MESSAGE
+     */
+    fun sendMessage(
+        sms: Sms.AppSmsShort,
+        uri: Uri
+    ): Boolean
+    {
+        // Return success
+        var succ = false
+        val smsM = SmsManager.getDefault()
+
+        // Check if app is default; have to manage provider if so
+        if (Telephony.Sms.getDefaultSmsPackage(_context) == _context.packageName)
+            {
+                l.d("SMS-MANAGER: SEND SMS AS DEFAULT")
+                smsM.sendMultipartTextMessage(
+                    sms.address,
+                    null,
+                    smsM.divideMessage(sms.body),
+                    null,
+                    null
+                )
+                succ = insertSms(uri, sms)
+            }
+        else  // The system handles the provider if not default
+        {
+            l.d("SMS-MANAGER: SEND SMS AS ANOTHER APP")
+            smsM.sendMultipartTextMessage(
+                sms.address,
+                null,
+                smsM.divideMessage(sms.body),
+                null,
+                null
+            )
+        }
+
+        return succ
+    }
+
+    /**
+     * INSERT MESSAGE TO DATABASE
+     */
+    private fun insertSms(uri: Uri, sms: Sms.AppSmsShort): Boolean
+    {
+        var succ = false
+
+        val values = contentValuesOf(
+            Telephony.Sms.ADDRESS to sms.address,
+            Telephony.Sms.BODY to sms.body,
+            Telephony.Sms.DATE_SENT to sms.date_sent,
+            Telephony.Sms.DATE to sms.date,
+            Telephony.Sms.READ to sms.read,
+            Telephony.Sms.TYPE to sms.type
+        )
+
+        values.put("creator", sms.creator)
+        values.put("sub_id", sms.sub_id)
+
+        // Change later with PendingIntents
+        if (true)
+        {
+            values.put("status", 32)
+        }
+        if (sms.thread_id != -1L)
+        {
+            values.put("thread_id", sms.thread_id)
+        }
+        _context.contentResolver.insert(
+            uri,
+            values
+        )?.lastPathSegment?.toLong()?.let {
+            if (it != null)
+            {
+                l.d("SMS-MANAGER: INSERT SMS:: $it")
+                succ = true
+            }
+        }
+
+        return succ
+    }
+
     /**
      * INSERT RECEIVED SMS
      */
-    fun insertRecSms (
+    fun insertRecSms(
         subId: Int,
         add: String,
         body: String,
@@ -80,17 +183,17 @@ class SmsManager
         val values = contentValuesOf(
             Telephony.Sms.ADDRESS to add,
             Telephony.Sms.BODY to body,
-            Telephony.Sms.DATE_SENT to time,
-            Telephony.Sms.SUBSCRIPTION_ID to subId
+            Telephony.Sms.DATE_SENT to time
         )
 
+        values.put("sub_id", subId)
         _context.contentResolver.insert(
             SMS_CONTENT_URI,      // content://sms
             values
         )?.lastPathSegment?.toLong()?.let {
             if (it != null)
             {
-                l.d("SMS-MANAGER: INSERT SMS:: $it")
+                l.d("SMS-MANAGER: INSERT RECEIVED SMS:: $it")
                 succ = true
             }
         }
@@ -162,7 +265,7 @@ class SmsManager
 
                 val sms = Sms.AppSmsShort(
                     c.getInt(0),      // _ID
-                    c.getInt(1),      // thread_ID
+                    c.getLong(1),      // thread_ID
                     c.getString(2),   // address
                     c.getInt(3),      // person
                     c.getLong(4),      // date
@@ -219,7 +322,7 @@ class SmsManager
 
                     val sms = Sms.AppSmsShort(
                         c.getInt(37),      // _ID
-                        c.getInt(10),      // thread_ID
+                        c.getLong(10),      // thread_ID
                         c.getString(25),   // address
                         c.getInt(34),      // person
                         c.getLong(0),      // date

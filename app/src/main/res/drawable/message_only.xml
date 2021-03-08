@@ -3,7 +3,7 @@
     android:shape="rectangle">
 
     <corners android:radius="18dp" />
-    <solid android:color="@color/messageBubbleIn" />
+    <solid android:color="@color/tools_theme" />
     <padding
         android:bottom="8dp"
         android:left="12dp"
