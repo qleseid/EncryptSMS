@@ -36,75 +36,19 @@ class TitleActivity : AppCompatActivity() {
     //Intent extra strings
     private val param1: String = "param1"
     private val mainIntentExtra: String = "welcome start clicked"
-//    private lateinit var appBarConfiguration: AppBarConfiguration
-//    private lateinit var mActionBar: ActionBar
-//    private lateinit var drawerLayout: DrawerLayout
-//    private lateinit var mDrawerToggle: ActionBarDrawerToggle
-//
-//    private var mBarListener: Boolean = false
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_title)
-//        setSupportActionBar(findViewById(R.id.toolbar))
-//        mActionBar = supportActionBar!!
 
-
-        // Check Permissions
-//        checkSmsPermission()
-
-        //TODO: working on getting Action Bar working properly between the fragments
-//        drawerLayout = findViewById(R.id.title_drawer_layout)
-//        mDrawerToggle = ActionBarDrawerToggle(
-//        this,
-//        drawerLayout,
-//        findViewById(R.id.toolbar),
-//        R.string.navigation_drawer_open,
-//        R.string.navigation_drawer_close)
-
-//        drawerLayout.addDrawerListener(mDrawerToggle)
-//        mDrawerToggle.syncState()
-
-//        while (!moveOn)
-//        {
-//            val temp = "waiting"
-//            // Check Permissions
-//            checkSmsPermission()
-//            this.lifecycleScope.launch(Dispatchers.Default) {
-//            //delay(1000)
-//
-//                LogMe().i("WELCOME: $temp")
-//            }
-//        }
 
         val navView: NavigationView = findViewById(R.id.title_nav_view)
         val navController = findNavController(R.id.title_nav_host_fragment)
         val intentFrag = intent.extras?.get(ARG_PARAM1).toString()
         Log.i(ContentValues.TAG, "intent frag: $intentFrag")
 
-        // Passing each menu ID as a set of Ids because each
-        // menu should be considered as top level destinations.
-//        appBarConfiguration = AppBarConfiguration(setOf(
-//            R.id.nav_first, R.id.nav_second), drawerLayout)
-//        setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
-
-//        if (savedInstanceState != null) {
-////            resolveUpButtonWithFragStack()
-//        }else{
-//            //Check intent arguments for specific fragment request
-//            when (intentFrag) {
-//                ABOUT_FRAG -> {
-//                    Log.i(ContentValues.TAG, "Second Fragment created from intent")
-////                    mDrawerToggle.isDrawerIndicatorEnabled = false
-////                    mActionBar.setDisplayHomeAsUpEnabled(true)
-////                    appBarConfiguration.drawerLayout.setDrawerIndicatorEnable(false)
-//                    navController.navigate(R.id.nav_second)
-//                }
-//                else -> Log.i(ContentValues.TAG, "First Fragment created from intent in ELSE")
-//            }
-//        }
     }
 
     /**
@@ -164,7 +108,6 @@ class TitleActivity : AppCompatActivity() {
         }
     }
 
-
     private fun appLaunch()
     {
         //Create splash delay
@@ -176,53 +119,4 @@ class TitleActivity : AppCompatActivity() {
             this.finish()
         }, 2200)
     }
-
-    /*
-    private fun resolveUpButtonWithFragStack(){
-        showUpButton(supportFragmentManager?.backStackEntryCount > 0)
-    }
-    private fun showUpButton(show: Boolean){
-        if (show){
-            mDrawerToggle.isDrawerIndicatorEnabled = false
-            mActionBar.setDisplayHomeAsUpEnabled(true)
-
-            if (!mBarListener){
-                mDrawerToggle.setToolbarNavigationClickListener {
-                        onBackPressed()
-                }
-                mBarListener = true
-            }
-        }else{
-            mActionBar.setDisplayHomeAsUpEnabled(false)
-            mDrawerToggle.isDrawerIndicatorEnabled = true
-            mDrawerToggle.setToolbarNavigationClickListener { null }
-            mBarListener = false
-        }
-    }
-
-*/
-
-//
-//
-//    override fun onOptionsItemSelected(conversation: MenuItem): Boolean {
-//        return when (conversation.itemId) {
-//            //Handles the home menu click event
-//            android.R.id.home -> {
-//                Toast.makeText(applicationContext, "Home Clicked in About", Toast.LENGTH_LONG).show()
-//                onBackPressed()
-//                true
-//            }
-//            else -> return super.onOptionsItemSelected(conversation)
-//        }
-//    }
-////    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-////        // Inflate the menu; this adds items to the action bar if it is present.
-////        menuInflater.inflate(R.menu.main, menu)
-////        return true
-////    }
-//
-//    override fun onSupportNavigateUp(): Boolean {
-//        val navController = findNavController(R.id.title_nav_host_fragment)
-//        return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
-//    }
 }

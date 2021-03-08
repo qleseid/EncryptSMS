@@ -11,6 +11,7 @@ import android.widget.TextView
 import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Observer
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DiffUtil
@@ -19,6 +20,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.encryptsms.MainSharedViewModel
 import com.example.encryptsms.R
 import com.example.encryptsms.R.id
+import com.example.encryptsms.data.livedata.ReceiveNewSms
 import com.example.encryptsms.data.model.Sms
 import com.example.encryptsms.databinding.FragmentThreadsBinding
 import com.example.encryptsms.ui.conversation.ConversationFragment
@@ -59,12 +61,19 @@ class ThreadFragment : Fragment() {
         // Debug
         l.d("Threads: On Create View")
 
+
         //Floating action button
         val fab = activity?.findViewById<FloatingActionButton>(R.id.fab)
 
         //TODO:: This button still need full functionality; add new conversation with details.
         fab?.setOnClickListener {
-            requireActivity().findNavController(R.id.nav_host_fragment).navigate(R.id.nav_conversations)
+
+            // Nav to Conversation Fragment and adds in a blank SMS as arg
+            var bundle = Bundle().apply {
+                putSerializable(ConversationFragment.ARG_ITEM_ID, Sms.AppSmsShort())
+            }
+            requireActivity().findNavController(R.id.nav_host_fragment).navigate(R.id
+                .nav_conversations, bundle)
         }
         return rootView
     }
@@ -79,10 +88,22 @@ class ThreadFragment : Fragment() {
 
         setupRecyclerView(recyclerView)
 
+        // Observe data changes from Broadcast Receiver
+        ReceiveNewSms.get().observe(viewLifecycleOwner, Observer<Boolean> {
+
+            l.d("Threads SMS OBSERVER: $it")
+            if (it)
+            {
+                threadsSharedViewModel.refresh(0)
+                ReceiveNewSms.set(false)
+            }
+        })
+
         //LiveData for RecyclerView
         threadsSharedViewModel.threads.observe(viewLifecycleOwner, {
 
             // Submit recycler the changed list items
+            // The runnable ensures the list is done so positioning works correct
             adapter.submitList(ArrayList(it), kotlinx.coroutines.Runnable {
                 kotlin.run {
                     recyclerView.scrollToPosition(0)
@@ -110,7 +131,7 @@ class ThreadFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        threadsSharedViewModel.change.observeForever {
+        threadsSharedViewModel.encSwitch.observeForever {
             l.d("Threads: LiveData observer Forever!!!!!!!!!!!!!!!!!!!!!!!!! $it")
         }
     }

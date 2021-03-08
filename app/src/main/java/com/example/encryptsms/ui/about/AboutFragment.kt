@@ -14,7 +14,6 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 
 /**
  * The About [Fragment] in the nav drawer welcome activity.
- * TODO:: Move fragment to main activity when slash screen is complete in welcome activity.
  */
 class AboutFragment : Fragment() {
 

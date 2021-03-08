@@ -77,4 +77,9 @@
         <item name="textSize">toolbar</item>
     </style>
 
+    <style name="SwitchCompactStyle">
+        <item name="trackTint">@color/switch_color_selector</item>
+        <item name="thumbTint">@color/toolbarLight</item>
+    </style>
+
 </resources>

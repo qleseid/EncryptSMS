@@ -9,7 +9,7 @@ upon a data connection.
 
 ## Current Status
 
-[![GitHub commits](https://img.shields.io/github/commits-since/Naereen/StrapDown.js/v1.0.0.svg)](https://GitHub.com/Naereen/StrapDown.js/commit/) [![Github all releases](https://img.shields.io/github/downloads/Naereen/StrapDown.js/total.svg)](https://GitHub.com/Naereen/StrapDown.js/releases/) [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://GitHub.com/Naereen/StrapDown.js/graphs/commit-activity)
+[![GitHub commits](https://img.shields.io/github/commits-since/Naereen/StrapDown.js/v1.3.svg)](https://GitHub.com/Naereen/StrapDown.js/commit/) [![Github all releases](https://img.shields.io/github/downloads/Naereen/StrapDown.js/total.svg)](https://GitHub.com/Naereen/StrapDown.js/releases/) [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://GitHub.com/Naereen/StrapDown.js/graphs/commit-activity)
 
 Encrypt SMS is in the early stages of development. Once a functional application is produced,
 an apk to load on Android will be published here.
@@ -22,7 +22,7 @@ This project is interesting idea that I'm chasing down. It would be foolish to a
 
 ### Documentation
 
-![Doc version](https://img.shields.io/badge/doc.odt-v1.7-blueviolet)
+![Doc version](https://img.shields.io/badge/doc.odt-v1.8-blueviolet)
 
 
 The <span style="color:blue">**docs**</span> folder contains the running project document. It will be updated weekly.

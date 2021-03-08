@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu
+
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-
 
     <item
         android:id="@+id/action_home"
         android:icon="@drawable/ic_menu_home"
-        android:orderInCategory="50"
+        android:orderInCategory="51"
         android:title="@string/action_home"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="never" />
 
     <item
         android:id="@+id/action_no_vis"
         android:icon="@drawable/ic_menu_no_vis_appbar"
         android:orderInCategory="100"
         android:title="@string/action_no_vis"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="never" />
 
     <item
         android:id="@+id/action_about"
@@ -31,4 +31,12 @@
         android:orderInCategory="11"
         android:title="@string/menu_action_settings"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/app_bar_switch"
+        android:orderInCategory="12"
+        android:checkable="false"
+        android:title="@string/app_bar_switch"
+        app:actionLayout="@layout/switch_item"
+        app:showAsAction="ifRoom" />
+
 </menu>

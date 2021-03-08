@@ -1,15 +1,18 @@
 package com.example.encryptsms
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.telephony.PhoneNumberUtils
 import android.view.Menu
 import android.view.MenuItem
-import android.view.View
+import android.widget.EditText
+import android.widget.RelativeLayout
 import android.widget.Toast
 import androidx.activity.viewModels
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.SwitchCompat
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.drawerlayout.widget.DrawerLayout
@@ -22,6 +25,7 @@ import androidx.navigation.ui.setupWithNavController
 import com.example.encryptsms.databinding.ActivityMainBinding
 import com.example.encryptsms.utility.LogMe
 import com.google.android.material.navigation.NavigationView
+import com.google.android.material.textfield.TextInputLayout
 
 /**
  * Main activity with navigation drawer and action bar.
@@ -40,8 +44,9 @@ open class MainActivity : AppCompatActivity() {
 
     //Intent extra strings
     private val param1: String = "param1"
-    private val homeIntentExtra: String = "Home clicked appbar"
-    private val aboutIntentExtra: String = "about_frag"
+    private val appBarSwitchOn: String = "Switch On appbar"
+    private val appBarSwitchOff: String = "Switch Off appbar"
+    private val appBarSetting: String = "Settings clicked"
 
     //Logger
     private var l = LogMe()
@@ -70,23 +75,17 @@ open class MainActivity : AppCompatActivity() {
         inst = this
     }
 
-    @SuppressLint("RestrictedApi")
     override fun onCreate(
         savedInstanceState: Bundle?
     )
     {
         super.onCreate(savedInstanceState)
-//        // Send context to factory
-//        FactoryImpl().register(applicationContext, this.application)
 
         //Inflate all views and bind to variable
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-
         //Find and set the activity toolbar
-//        toolbar = binding.appBarMain.toolbar
-//        toolbar = findViewById(R.id.toolbar)
         setSupportActionBar(binding.appBarMain.toolbar)
 
         drawerLayout = binding.drawerLayout
@@ -103,14 +102,6 @@ open class MainActivity : AppCompatActivity() {
 
         // Check Permissions
         checkSmsPermission()
-
-
-    }
-
-    override fun onBackPressed()
-    {
-        super.onBackPressed()
-        l.d("Override for on back press")
     }
 
     override fun onCreateOptionsMenu(
@@ -119,12 +110,34 @@ open class MainActivity : AppCompatActivity() {
     {
         // Inflate the menu; this adds items to the action bar if it is present.
         menuInflater.inflate(R.menu.main_action_bar, menu)
+
+        // Encryption toggle listener
+        val rela = menu.findItem(R.id.app_bar_switch)?.actionView as RelativeLayout
+        val switch = rela.findViewById(R.id.switch_compat) as SwitchCompat
+
+        switch.setOnCheckedChangeListener { buttonView, isChecked ->
+
+            if (isChecked)
+            {
+                sharedViewModel.setEncryptedToggle(true)
+            }
+            else
+            {
+                sharedViewModel.setEncryptedToggle(false)
+            }
+        }
+
+
+        // Look for switch changes between views to maintain switch position
+        sharedViewModel.encSwitch.observe(this, {
+            switch.isChecked = it
+        })
+
         return true
     }
 
     override fun onSupportNavigateUp(): Boolean
     {
-        l.d("Trying to pop the stack with up button")
         return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
     }
 
@@ -133,17 +146,14 @@ open class MainActivity : AppCompatActivity() {
         item: MenuItem
     ): Boolean
     {
+        super.onOptionsItemSelected(item)
+
         return when (item.itemId)
         {
             //Handles the home menu click event
             R.id.action_home ->
             {
                 Toast.makeText(applicationContext, homeActionMessage, Toast.LENGTH_LONG).show()
-//                val intent = Intent(this, TitleActivity::class.java).apply {
-//                    putExtra(param1, homeIntentExtra)
-//                }
-//                startActivity(intent)
-                sharedViewModel.refresh()
                 true
             }
             //Handles the about menu click event
@@ -158,6 +168,11 @@ open class MainActivity : AppCompatActivity() {
             {
                 Toast.makeText(applicationContext, hideActionMessage, Toast.LENGTH_LONG).show()
                 supportActionBar?.hide()
+                true
+            }
+            R.id.action_settings ->
+            {
+                Toast.makeText(applicationContext, appBarSetting, Toast.LENGTH_LONG).show()
                 true
             }
             else -> super.onOptionsItemSelected(item)
@@ -190,11 +205,34 @@ open class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * SEND MESSAGE BUTTON
+     * ALERT POP DIALOG BOX
      */
-    fun sendMessage(
-        view: View
-    ){
-        Toast.makeText(this, "Message Sent", Toast.LENGTH_SHORT).show()
+    fun showAlertWithTextInput() {
+        val textInputLayout = TextInputLayout(this)
+        textInputLayout.setPadding(
+            resources.getDimensionPixelOffset(R.dimen.dp_19),
+            0,
+            resources.getDimensionPixelOffset(R.dimen.dp_19),
+            0
+        )
+        val input = EditText(this)
+        textInputLayout.hint = "Recipient"
+        textInputLayout.addView(input)
+
+        val alert = AlertDialog.Builder(this)
+            .setTitle("Enter Number")
+            .setView(textInputLayout)
+            .setMessage("Please enter phone number")
+            .setPositiveButton("OK") { dialog, _ ->
+                dialog.dismiss()
+                binding.appBarMain.toolbar.title = PhoneNumberUtils.formatNumber(input.text.toString())
+            sharedViewModel.tempSms.address = input.text.toString()
+            sharedViewModel.findThreadId()
+            }
+            .setNegativeButton("Cancel") { dialog, _ ->
+                dialog.cancel()
+            }.create()
+
+        alert.show()
     }
 }
