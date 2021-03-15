@@ -34,7 +34,7 @@ class MainSharedViewModelTest
     fun getApplication()
     {
         val enc = taskViewModel.encSwitch.value!!
-        assertFalse("should be false", enc)
+        assertFalse("should be false ", enc)
     }
 
     @Test
