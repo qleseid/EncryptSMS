@@ -108,7 +108,7 @@ open class MainActivity : AppCompatActivity() {
         menu: Menu
     ): Boolean
     {
-        // Inflate the menu; this adds items to the action bar if it is present.
+        // Inflate the menu; this adds keys to the action bar if it is present.
         menuInflater.inflate(R.menu.main_action_bar, menu)
 
         // Encryption toggle listener

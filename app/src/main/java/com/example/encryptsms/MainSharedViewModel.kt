@@ -9,7 +9,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.example.encryptsms.data.model.Phone
 import com.example.encryptsms.data.model.Sms
-import com.example.encryptsms.items.ItemContent
+import com.example.encryptsms.keys.KeyContent
 import com.example.encryptsms.repository.ItemRepository
 import com.example.encryptsms.utility.CryptoMagic
 import com.example.encryptsms.utility.LogMe
@@ -42,8 +42,8 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
 
 
     //Items and map
-    private var _items: MutableLiveData<ArrayList<ItemContent.AppItem>> = MutableLiveData()
-    val items: LiveData<ArrayList<ItemContent.AppItem>>
+    private var _items: MutableLiveData<ArrayList<KeyContent.AppKey>> = MutableLiveData()
+    val items: LiveData<ArrayList<KeyContent.AppKey>>
         get() = _items
 
     private var _itemsMap: MutableLiveData<MutableMap<String, Int>> = MutableLiveData()
@@ -65,14 +65,13 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
     //Logger
     private var l = LogMe()
 
-    //Create instance to save items to file
+    //Create instance to save keys to file
     private val itemRep = ItemRepository(context)
 
     init
     {
         //Get all messages
         getAllThreads()
-        clearTemp()
     }
 
     /**
@@ -147,8 +146,8 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
         viewModelScope.launch(Dispatchers.IO) {
 
             // Use thread ID and address to get all the messages
-            smsM.getSms(arrayListOf(
-                Phone(tempSms.thread_id.toString(), tempSms.address)))?.let { data.addAll(it) }
+            smsM.getSms(arrayListOf(Phone.pho(tempSms.thread_id.toString(),tempSms.address)
+                ))?.let { data.addAll(it) }
 
             for ((con, d) in data.withIndex())
             {
@@ -192,154 +191,5 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
             tempSms.thread_id = res
             getAllMessages()
         }
-    }
-
-    /**
-     * CREATE ITEM
-     * Create a new conversation:: this is only a generic conversation for now
-     */
-    fun create(){
-
-//        //Get size of the items array
-//        val itemS = _items.value?.size?.plus(1)
-//
-//        //Set next ID
-//        l.d("View Create: ${tempSms.content} ${tempSms.amount} ${tempSms.details} ${tempSms.icon} ${tempSms.hashCode()}")
-//
-//        var newItem = tempSms
-//        newItem.id = itemS?.minus(1).toString()
-//
-//        l.d("MAIN SHARED VIEW MODEL: Create Items size start: ${_items.value?.size}")
-//
-//        var success = false
-
-        //New Item
-//        val newItem = ItemContent.AppItem(
-//            itemS.toString(),
-//            "Item $itemS",
-//            "Button created conversation and this is the system nano time: ${System.nanoTime() * .00000001}",
-//            "handyman_black_24dp",
-//            12.57f
-//        )
-
-//        //Create a new coroutine to move execution off of UI thread
-//        viewModelScope.launch {
-//            success = itemRep.create(newItem)
-//
-//            //Add new conversation to data list
-//            if (success) {
-//
-//                if (itemS != null) {
-//                    _items.value?.add(newItem)
-//                    //Have to post to trigger the Observer
-//                    _items.postValue(_items.value)
-//                }
-//
-//                //Update hash map of items
-//                hashMap()
-//                l.d("Item creation was successful")
-//                l.d("MAIN SHARED VIEW MODEL: Create Items size end: ${_items.value?.size}")
-//            }
-//        }
-    }
-
-    /**
-     * UPDATE ITEM
-     * Update an conversation
-     * @param conversation: ItemContent.AppItem
-     */
-    fun update(){
-
-//        var success = false
-//
-//        //Set next ID
-//        l.d("View UPDATE: ${tempSms.content} ${tempSms.amount} ${tempSms.details} ${tempSms.icon} ${tempSms.hashCode()}")
-//
-//        var upItem = tempSms
-//        val pos = upItem.id.toInt().minus(1)
-//        //Create a new coroutine to move execution off of UI thread
-//        viewModelScope.launch {
-//            success = itemRep.update(upItem)
-//
-//
-//            //Add new conversation to data list
-//            if (success) {
-//
-//                //Find conversation and replace data with updated info
-//                _items.value?.set(pos, upItem)
-//                    l.d(
-//                        "View UPDATE conversation: ${
-//                            _items.value?.get(pos)?.content
-//                        }" +
-//                                " ${_items.value?.get(pos)?.amount} " +
-//                                "${_items.value?.get(pos)?.details} " +
-//                                "${_items.value?.get(pos)?.icon}"
-//                    )
-//
-//
-//                //Have to post to trigger the Observer
-//                _items.postValue(_items.value)
-//
-//                //Update hash map of items
-//                hashMap()
-//                l.d("Item update was successful")
-//            }
-//        }
-    }
-
-    /**
-     * DELETE ITEM
-     * Delete an conversation
-     * @param item: ItemContent.AppItem
-     */
-    fun delete(item: ItemContent.AppItem){
-
-//        var success = false
-//
-//        //Create a new coroutine to move execution off of UI thread
-//        viewModelScope.launch {
-//            success = itemRep.delete(item)
-//
-//
-//            //Add new conversation to data list
-//            if (success) {
-//
-//                //Find conversation and delete data
-//                _itemsMap.value?.get(item.id).let { _items.value?.removeAt(it!!.toInt()) }
-//                //Have to post to trigger the Observer
-//                _items.postValue(_items.value)
-//
-//                //Update hash map of items
-//                hashMap()
-//                l.d("Item deletion was successful")
-//            }
-//        }
-    }
-
-    /**
-     * SET ITEM HASH_MAP
-     * Sets hashMap so fragments can reference the correct conversation when clicked on
-     */
-    private fun hashMap(){
-
-        //Get size of the items array
-//        val itemS = _items.value?.size
-//        l.d("Main VIEWMODEL hashmap method and map size: ${_itemsMap.value?.size} Items: $itemS")
-//
-//
-//        if (itemS != null) {
-//            _itemsMap.value?.clear()
-//            for (i in 0 until itemS) {
-//                l.d("Items size is $itemS and map size: ${_itemsMap.value?.size}")
-//                _itemsMap.value?.set(_items.value?.get(i)?.id.toString(), i)
-//            }
-//        }
-    }
-
-    /**
-     * Clear the temp conversation for new data
-     */
-    fun clearTemp(){
-//        tempSms = ItemContent.AppItem("-1", "", "", "", 0.0f)
     }
 }

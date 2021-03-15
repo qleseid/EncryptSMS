@@ -41,18 +41,18 @@ class SmsManager
         l.d("SMSMANAGER: constructor")
     }
 
-    fun getSms(phones: ArrayList<Phone?>): ArrayList<Sms.AppSmsShort>?
+    fun getSms(phones: ArrayList<Phone.pho?>): ArrayList<Sms.AppSmsShort>?
     {
         return getSms(phones, null)
     }
 
-    fun getSms(phones: ArrayList<Phone?>, search: String?): ArrayList<Sms.AppSmsShort>?
+    fun getSms(phones: ArrayList<Phone.pho?>, search: String?): ArrayList<Sms.AppSmsShort>?
     {
         val res: ArrayList<Sms.AppSmsShort>? = ArrayList()
         for (phone in phones)
         {
 //            var where = "address = ${phone?.getCleanNumber()}"
-            var where = "thread_id = ${phone?.getContactName()}"
+            var where = "thread_id = ${phone?.mContactName}"
             if (search != null) {
                 where += " and body LIKE '%" + search.replace("'", "''") + "%'"
             }

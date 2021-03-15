@@ -3,8 +3,10 @@ package com.example.encryptsms
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import org.junit.After
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -15,36 +17,31 @@ class MainSharedViewModelTest
     @get:Rule
     var instantExecutorRule = InstantTaskExecutorRule()
 
+    private lateinit var taskViewModel: MainSharedViewModel
+
+    @Before
+    fun setup()
+    {
+        taskViewModel = MainSharedViewModel(ApplicationProvider.getApplicationContext())
+    }
+
+    @After
+    fun tearDown()
+    {
+    }
 
     @Test
     fun getApplication()
     {
-        val taskViewModel = MainSharedViewModel(ApplicationProvider.getApplicationContext())
+        val enc = taskViewModel.encSwitch.value!!
+        assertFalse("should be false ", enc)
+    }
 
-        var enc = taskViewModel.encSwitch.value!!
-        assertFalse("should be false", enc)
+    @Test
+    fun `set the encrypted toggle`()
+    {
         taskViewModel.setEncryptedToggle(true)
-        enc = taskViewModel.encSwitch.value!!
+        val enc = taskViewModel.encSwitch.value!!
         assertTrue("should be true", enc)
-    }
-
-    @Test
-    fun getTag()
-    {
-    }
-
-    @Test
-    fun getEncSwitch()
-    {
-    }
-
-    @Test
-    fun getDraft()
-    {
-    }
-
-    @Test
-    fun setDraft()
-    {
     }
 }

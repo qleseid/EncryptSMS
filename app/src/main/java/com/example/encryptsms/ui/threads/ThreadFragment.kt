@@ -102,7 +102,7 @@ class ThreadFragment : Fragment() {
         //LiveData for RecyclerView
         threadsSharedViewModel.threads.observe(viewLifecycleOwner, {
 
-            // Submit recycler the changed list items
+            // Submit recycler the changed list keys
             // The runnable ensures the list is done so positioning works correct
             adapter.submitList(ArrayList(it), kotlinx.coroutines.Runnable {
                 kotlin.run {
