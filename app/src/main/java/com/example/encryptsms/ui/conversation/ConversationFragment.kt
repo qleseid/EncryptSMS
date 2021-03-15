@@ -78,13 +78,13 @@ class ConversationFragment : Fragment() {
         _binding = ActivityConversationDetailBinding.inflate(inflater, container, false)
         val rootView = binding.root
 
-        //Allow fragment to hide toolbar items
+        //Allow fragment to hide toolbar keys
         setHasOptionsMenu(true)
 
         // Hide the Floating Button in this Fragment
         activity?.findViewById<FloatingActionButton>(R.id.fab)?.hide()
 
-        // Show the items content as text in a TextView.
+        // Show the keys content as text in a TextView.
         convoSharedViewModel.tempSms.let {
 //            binding.toolbarTitle.text = it.address
             activity?.findViewById<Toolbar>(R.id.toolbar)?.title = PhoneNumberUtils.formatNumber(it.address)
@@ -135,7 +135,7 @@ class ConversationFragment : Fragment() {
         //LiveData for RecyclerView
         convoSharedViewModel.messages.observe(viewLifecycleOwner, {
 
-            // Submit recycler the changed list items
+            // Submit recycler the changed list keys
             adapter.submitList(ArrayList(it), kotlinx.coroutines.Runnable {
                 kotlin.run {
                     recyclerView.scrollToPosition(adapter.itemCount - 1)

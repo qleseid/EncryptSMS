@@ -1,9 +1,9 @@
 package com.example.encryptsms.repository
 
 import android.content.Context
-import com.example.encryptsms.database.IItemSvc
-import com.example.encryptsms.database.ItemSvcSQLiteImpl
-import com.example.encryptsms.items.ItemContent
+import com.example.encryptsms.database.ContactKeySvcSQLiteImpl
+import com.example.encryptsms.database.IContactKeySvc
+import com.example.encryptsms.keys.KeyContent
 import com.example.encryptsms.utility.LogMe
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -13,7 +13,7 @@ class ItemRepository(_context: Context) {
     //Context
     private val context = _context
     //DOA Interface
-    private val itemDoa: IItemSvc = ItemSvcSQLiteImpl(context)
+    private val contactKeyDoa: IContactKeySvc = ContactKeySvcSQLiteImpl(context)
     //Logger
     private var l = LogMe()
 
@@ -21,10 +21,10 @@ class ItemRepository(_context: Context) {
      * GET ALL ITEMS
      */
     suspend fun getAll():
-            ArrayList<ItemContent.AppItem> {
-        val data = ArrayList<ItemContent.AppItem>()
+            ArrayList<KeyContent.AppKey> {
+        val data = ArrayList<KeyContent.AppKey>()
         withContext(Dispatchers.IO){
-            itemDoa.getAllItems()?.let { data.addAll(it) }
+            contactKeyDoa.getAllKeys()?.let { data.addAll(it) }
         }
         l.d("Repository GET ALL")
         return data
@@ -33,13 +33,16 @@ class ItemRepository(_context: Context) {
     /**
      * CREATE ITEM
      */
-    suspend fun create(_item: ItemContent.AppItem):
+    suspend fun create(_key: KeyContent.AppKey):
             Boolean {
 
         var success = false
 
         withContext(Dispatchers.IO){
-            success = itemDoa.create(_item)
+            if (contactKeyDoa.create(_key) != -1L)
+            {
+                success = true
+            }
         }
         l.d("Repository CREATE: $success")
         return success
@@ -48,12 +51,12 @@ class ItemRepository(_context: Context) {
     /**
      * UPDATE ITEM
      */
-    suspend fun update(_item: ItemContent.AppItem):
+    suspend fun update(_key: KeyContent.AppKey):
             Boolean {
         var success = false
 
         withContext(Dispatchers.IO){
-            success = itemDoa.update(_item)
+            success = contactKeyDoa.update(_key)
         }
         l.d("Repository UPDATE: $success")
         return success
@@ -62,12 +65,12 @@ class ItemRepository(_context: Context) {
     /**
      * DELETE ITEM
      */
-    suspend fun delete(_item: ItemContent.AppItem):
+    suspend fun delete(_key: KeyContent.AppKey):
             Boolean {
         var success = false
 
         withContext(Dispatchers.IO){
-            success = itemDoa.delete(_item)
+            success = contactKeyDoa.delete(_key)
         }
         l.d("Repository DELETE: $success")
         return success

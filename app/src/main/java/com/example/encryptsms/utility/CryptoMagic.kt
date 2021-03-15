@@ -28,7 +28,9 @@ object CryptoMagic
         l.i("KEY: ${Base64.encodeToString(key.encoded, DEFAULT)}")
     }
 
-    fun encrypt(msg: String): String
+    fun encrypt(
+        msg: String
+    ): String
     {
         val cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING")
         cipher.init(Cipher.ENCRYPT_MODE, key, IvParameterSpec(ByteArray(16)))
@@ -43,7 +45,9 @@ object CryptoMagic
         return Base64.encodeToString(result, DEFAULT)
     }
 
-    fun decrypt(msg: String):String
+    fun decrypt(
+        msg: String
+    ):String
     {
         val dmsg = Base64.decode(msg, DEFAULT)
         l.d("DECRYPT: $dmsg")
