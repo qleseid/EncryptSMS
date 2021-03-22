@@ -57,10 +57,6 @@ class AboutFragment : Fragment() {
     ) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Show the Up button in the action bar.
-        //TODO:: This is still broken; no up caret, still hamburger icon.
-        //Guess is the fragment doesn't set the action bar so changes need to be done
-        //in the activity instead.
         setHasOptionsMenu(true)
 
         // Hide the Floating Button in this Fragment
@@ -100,8 +96,8 @@ class AboutFragment : Fragment() {
         inflater: MenuInflater
     ) {
         super.onCreateOptionsMenu(menu, inflater)
-        menu.findItem(R.id.action_home).isVisible = false
-        menu.findItem(R.id.action_about).isVisible = false
-        menu.findItem(R.id.action_no_vis).isVisible = false
+//        menu.findItem(R.id.action_home).isVisible = false
+//        menu.findItem(R.id.action_about).isVisible = false
+//        menu.findItem(R.id.action_no_vis).isVisible = false
     }
 }

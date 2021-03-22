@@ -56,6 +56,13 @@ class PhoneTest
     }
 
     @Test
+    fun `is not a cell number`()
+    {
+        phone.isCellPhoneNumber("655244121")?.let {
+            assertFalse("Phone number is not cell", it) }
+    }
+
+    @Test
     fun `numbers match`()
     {
         phone = Phone.pho(id,phnDirty)

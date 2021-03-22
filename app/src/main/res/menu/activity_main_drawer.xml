@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:showIn="navigation_view">
 
     <group android:checkableBehavior="single">
@@ -8,14 +9,16 @@
             android:id="@+id/nav_threads"
             android:icon="@drawable/ic_menu_folder"
             android:title="@string/menu_threads" />
+        <!--
         <item
             android:id="@+id/nav_conversations"
             android:icon="@drawable/ic_menu_items"
             android:title="@string/menu_conversation" />
+        -->
         <item
             android:id="@+id/nav_vis"
             android:icon="@drawable/ic_menu_vis_appbar"
-            android:onClick="showActionBar"
+            app:actionLayout="@layout/vis_switch_item"
             android:title="@string/menu_nav_vis" />
         <item
             android:id="@+id/nav_about"

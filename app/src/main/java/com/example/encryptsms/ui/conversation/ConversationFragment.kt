@@ -3,7 +3,8 @@ package com.example.encryptsms.ui.conversation
 import android.content.Context
 import android.os.Bundle
 import android.telephony.PhoneNumberUtils
-import android.telephony.SmsManager
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Log
 import android.view.*
 import android.view.inputmethod.InputMethodManager
@@ -13,7 +14,6 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -21,6 +21,7 @@ import com.example.encryptsms.MainActivity
 import com.example.encryptsms.MainSharedViewModel
 import com.example.encryptsms.R
 import com.example.encryptsms.data.livedata.ReceiveNewSms
+import com.example.encryptsms.data.model.Phone
 import com.example.encryptsms.data.model.Sms
 import com.example.encryptsms.databinding.ActivityConversationDetailBinding
 import com.example.encryptsms.utility.LogMe
@@ -28,7 +29,6 @@ import com.example.encryptsms.utility.widget.TightTextView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.collections.ArrayList
 
 class ConversationFragment : Fragment() {
     /**
@@ -39,8 +39,8 @@ class ConversationFragment : Fragment() {
     private var _binding: ActivityConversationDetailBinding? = null
     private val binding get() = _binding!!
 
-    // SMS manager
-    private val smsMang: SmsManager = SmsManager.getDefault()
+    // Keyboard management fun
+    private lateinit var keyBoard: InputMethodManager
 
     // For data and recycler views
     private lateinit var recyclerView: RecyclerView
@@ -78,6 +78,9 @@ class ConversationFragment : Fragment() {
         _binding = ActivityConversationDetailBinding.inflate(inflater, container, false)
         val rootView = binding.root
 
+        // Instantiate keyboard
+        keyBoard = context?.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+
         //Allow fragment to hide toolbar keys
         setHasOptionsMenu(true)
 
@@ -86,13 +89,30 @@ class ConversationFragment : Fragment() {
 
         // Show the keys content as text in a TextView.
         convoSharedViewModel.tempSms.let {
-//            binding.toolbarTitle.text = it.address
-            activity?.findViewById<Toolbar>(R.id.toolbar)?.title = PhoneNumberUtils.formatNumber(it.address)
+            convoSharedViewModel.setTitle(PhoneNumberUtils.formatNumber(it.address))
         }
 
         activity?.findViewById<Toolbar>(R.id.toolbar)?.setOnClickListener{
             (activity as MainActivity).showAlertWithTextInput()
         }
+
+        binding.message.addTextChangedListener(object: TextWatcher{
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int)
+            {
+//                TODO("Nothing to implement")
+            }
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int)
+            {
+                binding.send.isClickable = count > 0 && Phone.pho().isCellPhoneNumber(convoSharedViewModel.tempSms.address)!!
+            }
+
+            override fun afterTextChanged(s: Editable?)
+            {
+//                TODO("Nothing to implement")
+            }
+
+        })
 
         binding.send.setOnClickListener{
 
@@ -103,9 +123,10 @@ class ConversationFragment : Fragment() {
 
             // Cleanup the view
             binding.message.text.clear()
-            val keyBoard = context?.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
             keyBoard.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0)
         }
+
+        binding.send.isClickable = false
 
         // Sets the LiveData an triggers switch to return to set state in Main Activity Menu
         convoSharedViewModel.setEncryptedToggle(convoSharedViewModel.encSwitch.value!!)
@@ -123,7 +144,7 @@ class ConversationFragment : Fragment() {
         recyclerView = binding.messageList
 
         // Observe data changes from Broadcast Receiver
-        ReceiveNewSms.get().observe(viewLifecycleOwner, Observer<Boolean> {
+        ReceiveNewSms.get().observe(viewLifecycleOwner, {
             if (it)
             {
                 convoSharedViewModel.refresh(1)
@@ -136,7 +157,7 @@ class ConversationFragment : Fragment() {
         convoSharedViewModel.messages.observe(viewLifecycleOwner, {
 
             // Submit recycler the changed list keys
-            adapter.submitList(ArrayList(it), kotlinx.coroutines.Runnable {
+            adapter.submitList(it, kotlinx.coroutines.Runnable {
                 kotlin.run {
                     recyclerView.scrollToPosition(adapter.itemCount - 1)
                 }
@@ -157,21 +178,12 @@ class ConversationFragment : Fragment() {
     }
 
     @Override
-    override fun onResume() {
-        super.onResume()
-        // Debug
-        l.d("Conversation: On Resume")
-    }
-
-    @Override
     override fun onPause() {
         super.onPause()
-
         // Remove listener when Fragment isn't active
         activity?.findViewById<Toolbar>(R.id.toolbar)?.setOnClickListener(null)
-
-        // Debug
-        l.d("Conversation: On Pause")
+        // Hide keyboard if shown
+        keyBoard.hideSoftInputFromWindow(view?.windowToken, 0)
     }
 
     override fun onDestroyView()
@@ -206,13 +218,12 @@ class ConversationFragment : Fragment() {
         ListAdapter<Sms.AppSmsShort, SimpleConvoRecyclerViewAdapter.ViewHolder>(ItemDiffCallback())
     {
         private val onLongClickListener: View.OnLongClickListener
-        private val folderSharedViewModel: MainSharedViewModel by parentActivity.activityViewModels()
 
         init {
             Log.d("ConvoRecycle init:","*****************************************")
 
             onLongClickListener = View.OnLongClickListener {v ->
-                val item: String = "Delete:: ${v.tag as String}"
+                val item = "Delete:: ${v.tag as String}"
 
                 //Set the icon when clicked
                 setItemIcon(item)
@@ -238,8 +249,6 @@ class ConversationFragment : Fragment() {
             }
             return vh
         }
-
-
 
         /**
          * THIS RETURNS THE MESSAGE TYPE

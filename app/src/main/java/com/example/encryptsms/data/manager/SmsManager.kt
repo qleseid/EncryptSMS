@@ -15,7 +15,7 @@ class SmsManager
     //Logger
     var l = LogMe()
     private var _context: Context
-    private lateinit var _settings: SettingsManager
+    private var _settings: SettingsManager
 
     // URI STRINGS FOR ACCESSING THE DATABASE
     private val THREADS_CONTENT_URI: Uri = Uri.parse("content://mms-sms/conversations/")
@@ -157,11 +157,8 @@ class SmsManager
             uri,
             values
         )?.lastPathSegment?.toLong()?.let {
-            if (it != null)
-            {
-                l.d("SMS-MANAGER: INSERT SMS:: $it")
-                succ = true
-            }
+            l.d("SMS-MANAGER: INSERT SMS:: $it")
+            succ = true
         }
 
         return succ
@@ -191,11 +188,8 @@ class SmsManager
             SMS_CONTENT_URI,      // content://sms
             values
         )?.lastPathSegment?.toLong()?.let {
-            if (it != null)
-            {
-                l.d("SMS-MANAGER: INSERT RECEIVED SMS:: $it")
-                succ = true
-            }
+            l.d("SMS-MANAGER: INSERT RECEIVED SMS:: $it")
+            succ = true
         }
         return succ
     }
@@ -233,6 +227,9 @@ class SmsManager
             )
     }
 
+    /**
+     * GET ALL SMS
+     */
     private fun getAllSms(where: String?): ArrayList<Sms.AppSmsShort>?
     {
         l.d("SMS MANAGER: Get ALL SMs: $where")
@@ -299,8 +296,6 @@ class SmsManager
     /**
      * GET ALL THREADS
      */
-
-
     private fun getAllSmsThreads(where: String?): ArrayList<Sms.AppSmsShort>?
     {
         l.d("SMS MANAGER: Get ALL SMs THREADS: $where")

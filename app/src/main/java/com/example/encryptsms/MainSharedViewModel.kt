@@ -24,11 +24,8 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
     //Context of activity
     private val context = application.applicationContext
 
-    // SMS permission request
-    private val READ_SMS_PERMISSIONS_REQUEST = 1
-
     // SMS URI
-    private val SMS_CONTENT_URI: Uri = Uri.parse("content://sms")
+    private val smsContentUri: Uri = Uri.parse("content://sms")
 
     // Threads
     private var _threads: MutableLiveData<ArrayList<Sms.AppSmsShort>?> = MutableLiveData()
@@ -54,6 +51,9 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
     val encSwitch: LiveData<Boolean>
         get() = _encryptSwitch
 
+    private var _title: MutableLiveData<String> = MutableLiveData("Inbox")
+    val title: LiveData<String>
+        get() = _title
 
     lateinit var tempSms: Sms.AppSmsShort
     lateinit var draftSms: Sms.AppSmsShort
@@ -80,6 +80,17 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
     fun setEncryptedToggle(bool: Boolean)
     {
         _encryptSwitch.postValue(bool)
+
+        if (this::tempSms.isInitialized)
+        {
+            // Refreshes the recycler view in real-time
+            refresh(0)
+            refresh(1)
+        }
+        else
+        {
+            refresh(0)
+        }
     }
 
     /**
@@ -99,9 +110,10 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
      */
     fun sendSmsMessage(msg: String)
     {
-        var data = ArrayList<Sms.AppSmsShort>()
+        val data = ArrayList<Sms.AppSmsShort>()
         // Creates shallow copy of objects
-        _messages.value?.let { data = it.clone() as ArrayList<Sms.AppSmsShort> }
+//        _messages.value?.let { data = it.clone() as ArrayList<Sms.AppSmsShort> }
+        _messages.value?.map { data.add(it) }
 
         // Encrypt message if switch is set
         if(encSwitch.value!!)
@@ -124,7 +136,7 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
         // Copy to make new object: fixes reference copy issues
         draftSms = tempSms.copy()
 
-        if (smsM.sendMessage(draftSms, SMS_CONTENT_URI))
+        if (smsM.sendMessage(draftSms, smsContentUri))
         {
             l.d("SHARE SEND SMS SUCCESS!")
             // Add to end of list
@@ -149,15 +161,8 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
             smsM.getSms(arrayListOf(Phone.pho(tempSms.thread_id.toString(),tempSms.address)
                 ))?.let { data.addAll(it) }
 
-            for ((con, d) in data.withIndex())
-            {
-                l.d("DECRYPTING START: ${d.body}")
-                if (encSwitch.value!! && d.type == 2)
-                {
-                    data[con].body = CryptoMagic.decrypt(d.body)
-                }
-                l.d("DECRYPTING END: ${data[con].body}")
-            }
+            // Decrypt the messages
+            deLoop(data)
 
             _messages.postValue(data)
         }
@@ -175,6 +180,9 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
 
             smsM.getConvoThreads()?.let { data.addAll(it) }
 
+            // Decrypt the messages
+            deLoop(data)
+
             _threads.postValue(data)
         }
     }
@@ -184,12 +192,34 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
      */
     fun findThreadId()
     {
+        tempSms.thread_id = smsM.getThreadId(tempSms.address)
 
-        val res = smsM.getThreadId(tempSms.address)
-        if (res > -1L)
+        getAllMessages()
+    }
+
+    /**
+     * MESSAGE DECRYPT LOOP
+     */
+    private fun deLoop(data: ArrayList<Sms.AppSmsShort>)
+    {
+        // con = count, d = individual data
+        for ((con, d) in data.withIndex())
         {
-            tempSms.thread_id = res
-            getAllMessages()
+            l.d("DECRYPTING START: ${d.body}")
+//            if (encSwitch.value!! && d.type == 2)
+            if (encSwitch.value!!)
+            {
+                data[con].body = CryptoMagic.decrypt(d.body)
+            }
+            l.d("DECRYPTING END: ${data[con].body}")
         }
+    }
+
+    /**
+     * SET MAIN ACTIVITY TITLE
+     */
+    fun setTitle(stg: String)
+    {
+        _title.postValue(stg)
     }
 }

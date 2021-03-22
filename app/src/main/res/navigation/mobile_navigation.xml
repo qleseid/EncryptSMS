@@ -22,5 +22,5 @@
         android:id="@+id/nav_about"
         android:name="com.example.encryptsms.ui.about.AboutFragment"
         android:label="@string/menu_nav_about"
-        tools:layout="@layout/fragment_link_about" />
+        tools:layout="@layout/fragment_about" />
 </navigation>
