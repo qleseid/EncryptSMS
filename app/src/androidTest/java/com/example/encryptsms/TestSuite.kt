@@ -5,10 +5,9 @@ import org.junit.runners.Suite
 
 @RunWith(Suite::class)
 @Suite.SuiteClasses(
-//    MainActivityTest::class,
-    TitleActivityTest::class,
-//    ItemActivityTest::class,
-    AboutActivityTest::class
+    MainWithFabActivityTest::class,
+    MainActivityWithEncryptTest::class,
+    AboutActivityTest2::class
 
 )
 class TestSuite

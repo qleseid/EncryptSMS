@@ -11,7 +11,6 @@ import android.widget.TextView
 import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.Observer
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DiffUtil
@@ -28,13 +27,8 @@ import com.example.encryptsms.utility.LogMe
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.collections.ArrayList
 
 class ThreadFragment : Fragment() {
-    /**
-     * Whether or not the activity is in two-pane mode, i.e. running on a tablet
-     * device.
-     */
 
     // Binding view
     private var _binding: FragmentThreadsBinding? = null
@@ -65,11 +59,10 @@ class ThreadFragment : Fragment() {
         //Floating action button
         val fab = activity?.findViewById<FloatingActionButton>(R.id.fab)
 
-        //TODO:: This button still need full functionality; add new conversation with details.
         fab?.setOnClickListener {
 
             // Nav to Conversation Fragment and adds in a blank SMS as arg
-            var bundle = Bundle().apply {
+            val bundle = Bundle().apply {
                 putSerializable(ConversationFragment.ARG_ITEM_ID, Sms.AppSmsShort())
             }
             requireActivity().findNavController(R.id.nav_host_fragment).navigate(R.id
@@ -89,7 +82,7 @@ class ThreadFragment : Fragment() {
         setupRecyclerView(recyclerView)
 
         // Observe data changes from Broadcast Receiver
-        ReceiveNewSms.get().observe(viewLifecycleOwner, Observer<Boolean> {
+        ReceiveNewSms.get().observe(viewLifecycleOwner, {
 
             l.d("Threads SMS OBSERVER: $it")
             if (it)
@@ -104,7 +97,7 @@ class ThreadFragment : Fragment() {
 
             // Submit recycler the changed list keys
             // The runnable ensures the list is done so positioning works correct
-            adapter.submitList(ArrayList(it), kotlinx.coroutines.Runnable {
+            adapter.submitList(it, kotlinx.coroutines.Runnable {
                 kotlin.run {
                     recyclerView.scrollToPosition(0)
                 }
@@ -158,10 +151,10 @@ class ThreadFragment : Fragment() {
                 val msg = v.tag as Sms.AppSmsShort
 
                 // Nav to Conversation Fragment and adds in the selected thread as arg
-                var bundle = Bundle().apply {
+                val bundle = Bundle().apply {
                         putSerializable(ConversationFragment.ARG_ITEM_ID, msg)
                 }
-                parentActivity.findNavController().navigate(R.id.nav_conversations, bundle)
+                parentActivity.findNavController().navigate(id.nav_conversations, bundle)
             }
         }
 

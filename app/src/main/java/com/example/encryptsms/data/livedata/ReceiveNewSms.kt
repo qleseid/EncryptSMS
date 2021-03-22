@@ -4,6 +4,9 @@ import androidx.annotation.MainThread
 import androidx.lifecycle.LiveData
 import com.example.encryptsms.utility.LogMe
 
+/**
+ * SIGNAL APP TO REFRESH DATA WHEN ITS RECEIVED
+ */
 class ReceiveNewSms: LiveData<Boolean>()
 {
     //Logger

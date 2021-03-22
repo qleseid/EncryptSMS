@@ -17,15 +17,16 @@ object Phone: Serializable
         var mIsDefaultNumber: Boolean = false
     ): Serializable
     {
-        private val cellPhonePattern = Regex("\\+*\\d+")
+//        private val cellPhonePattern = Regex("\\+*\\d+")
+        private val cellPhonePattern = Regex("^[0-9]{3}[0-9]{3}[0-9]{4,6}\$")
 
         override fun toString(): String
         {
             return "$mNumber:: $mCleanNumber"
         }
 
-        fun phoneMatch(phone: String): Boolean? {
-            var phone = phone
+        fun phoneMatch(pho: String): Boolean? {
+            var phone = pho
             phone = cleanPhoneNumber(phone)
             if (mCleanNumber == phone) {
                 return true

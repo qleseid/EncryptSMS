@@ -49,24 +49,41 @@ object CryptoMagic
         msg: String
     ):String
     {
-        val dmsg = Base64.decode(msg, DEFAULT)
-        l.d("DECRYPT: $dmsg")
+        var result = msg
+        try
+        {
+            val dmsg = Base64.decode(msg, DEFAULT)
+            l.d("DECRYPT: $dmsg")
 
-        val cipherD = Cipher.getInstance("AES/CBC/PKCS5PADDING")
-        cipherD.init(Cipher.DECRYPT_MODE, key, IvParameterSpec(ByteArray(16)))
+            val cipherD = Cipher.getInstance("AES/CBC/PKCS5PADDING")
+            cipherD.init(Cipher.DECRYPT_MODE, key, IvParameterSpec(ByteArray(16)))
 
-        return String(cipherD.doFinal(dmsg))
+            result = String(cipherD.doFinal(dmsg))
+        }
+        catch (e: Exception)
+        {
+            l.d("DECRYPT ERROR: $e")
+        }
+        return result
     }
 
     private fun generateKeys()
     {
-        val keyGen = KeyPairGenerator.getInstance("DiffieHellman")
+        val keyGen = KeyPairGenerator.getInstance("DH")
         val keyPair = keyGen.genKeyPair()
         pub_key = keyPair.public
         pvt_key = keyPair.private
+//        val pub_encode = pub_key.encoded
 
-        l.d("PUB GEN: $pub_key")
-        l.d("PVT GEN: $pvt_key")
+        l.d("PUB GEN: ${Base64.encodeToString(pub_key.encoded, DEFAULT)}")
+//        l.d("PVT GEN: ${Base64.encodeToString(pvt_key.encoded, DEFAULT)}")
+//        l.d("PUB ENCODE: ${pub_key.encoded == pvt_key.encoded}")
+//
+//        val revKeyFac = KeyFactory.getInstance("DH")
+//        val x509 = X509EncodedKeySpec(pub_encode)
+//
+//        l.d("PUB RECEIVED: ${Base64.encodeToString(revKeyFac.generatePublic(x509).encoded,
+//            DEFAULT)}")
 
     }
 }

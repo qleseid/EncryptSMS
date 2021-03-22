@@ -5,7 +5,7 @@
     android:layout_height="match_parent">
 
     <androidx.appcompat.widget.SwitchCompat
-        android:id="@+id/switch_compat"
+        android:id="@+id/encrypt_switch_compat"
         style="@style/SwitchCompactStyle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
