@@ -36,8 +36,8 @@ class PhoneTest
     fun `check number is initialization`()
     {
         phone = Phone.pho(id,phn)
-        assertSame("Phone initialized correct", phn, phone.mCleanNumber)
-        assertSame("Phone initialized correct", phone.mNumber, phone.mCleanNumber)
+        assertSame("Phone initialized correct", phn, phone.mNumber)
+        assertSame("Phone initialized correct", phone.mNumber, phone.mNumber)
     }
 
     @Test
