@@ -183,17 +183,20 @@ data class ContentType(
      */
     fun getExtension(contentType: String): String?
     {
-        return if (VIDEO_MP4 == contentType)
+        return when
         {
-            VIDEO_MP4_EXTENSION
-        }
-        else if (VIDEO_3GPP == contentType)
-        {
-            THREE_GPP_EXTENSION
-        }
-        else
-        {
-            DEFAULT_EXTENSION
+            VIDEO_MP4 == contentType  ->
+            {
+                VIDEO_MP4_EXTENSION
+            }
+            VIDEO_3GPP == contentType ->
+            {
+                THREE_GPP_EXTENSION
+            }
+            else                      ->
+            {
+                DEFAULT_EXTENSION
+            }
         }
     }
 

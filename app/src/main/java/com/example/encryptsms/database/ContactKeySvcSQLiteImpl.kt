@@ -120,6 +120,7 @@ class ContactKeySvcSQLiteImpl(
             cursor.moveToNext()
         }
 
+        cursor.close()
         rdb.close()
 
         //Number of keys read into list

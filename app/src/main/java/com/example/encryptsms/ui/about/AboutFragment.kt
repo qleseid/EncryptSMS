@@ -7,7 +7,6 @@ import android.util.Log
 import android.view.*
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
 import com.example.encryptsms.R
 import com.example.encryptsms.databinding.FragmentAboutBinding
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -45,7 +44,7 @@ class AboutFragment : Fragment() {
         _binding = FragmentAboutBinding.inflate(inflater, container, false)
         val rootView = binding.root
 
-        aboutViewModel.text.observe(viewLifecycleOwner, Observer {
+        aboutViewModel.text.observe(viewLifecycleOwner, {
             binding.textviewSecond.text = it
         })
         return rootView

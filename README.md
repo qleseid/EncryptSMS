@@ -22,7 +22,7 @@ This project is interesting idea that I'm chasing down. It would be foolish to a
 
 ### Documentation
 
-![Doc version](https://img.shields.io/badge/doc.odt-v1.9-blueviolet)
+![Doc version](https://img.shields.io/badge/doc.odt-v1.10-blueviolet)
 
 
 The <span style="color:blue">**docs**</span> folder contains the running project document. It will be updated weekly.

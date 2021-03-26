@@ -1,3 +1,5 @@
+@file:Suppress("unused", "unused")
+
 package com.example.encryptsms.database
 
 import android.content.Context
@@ -259,7 +261,7 @@ class ContactKeySvcImpl(_context: Context): IContactKeySvc
             l.d("FOR LOOP i: $i")
 
             //Correct id if needed
-            var tempItem = KeyContent.AppKey(
+            val tempItem = KeyContent.AppKey(
                 i.toString(),
                 list[i].thread_id,
                 list[i].publicKey

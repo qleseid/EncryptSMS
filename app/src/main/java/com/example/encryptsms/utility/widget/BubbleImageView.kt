@@ -1,3 +1,5 @@
+@file:Suppress("unused", "unused")
+
 package com.example.encryptsms.utility.widget
 
 import android.content.Context

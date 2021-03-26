@@ -32,7 +32,8 @@
         app:layout_constraintEnd_toStartOf="@id/simIndex"
         app:layout_constraintStart_toEndOf="@id/timestamp"
         app:layout_constraintTop_toTopOf="@id/timestamp"
-        app:tint="?android:attr/textColorSecondary" />
+        app:tint="?android:attr/textColorSecondary"
+        android:contentDescription="@string/message_out_sim" />
 
     <TextView
         android:id="@+id/simIndex"
@@ -53,7 +54,6 @@
         android:layout_gravity="end"
         android:layout_marginEnd="12dp"
         android:gravity="end"
-        android:nestedScrollingEnabled="false"
         android:orientation="vertical"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         app:layout_constrainedWidth="true"
@@ -91,9 +91,6 @@
         android:layout_height="36dp"
         android:layout_marginEnd="8dp"
         android:background="@drawable/circle"
-        android:backgroundTint="?android:attr/textColorSecondary"
-        android:elevation="4dp"
-        android:foreground="?attr/selectableItemBackground"
         android:indeterminate="false"
         android:visibility="gone"
         android:progressDrawable="@drawable/circular_progress_bar"
@@ -106,7 +103,6 @@
         android:id="@+id/cancelIcon"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:elevation="4dp"
         android:padding="6dp"
         android:visibility="gone"
         android:src="@drawable/ic_cancel_black_24dp"
@@ -115,7 +111,7 @@
         app:layout_constraintStart_toStartOf="@id/cancel"
         app:layout_constraintTop_toTopOf="@id/cancel"
         tools:tint="@color/tools_theme"
-        android:contentDescription="TODO" />
+        android:contentDescription="@string/message_out_cancel_icon" />
 
     <TextView
         android:id="@+id/status"

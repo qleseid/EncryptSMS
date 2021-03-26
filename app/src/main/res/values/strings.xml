@@ -85,4 +85,10 @@
     <string name="status_failed">FAILED!</string>
     <string name="menu_action_settings">Settings</string>
     <string name="app_bar_switch" />
+    <string name="attachment_image_thumbnail">thumbnail</string>
+    <string name="attachment_list_detach">detach</string>
+    <string name="message_in_sim">sim</string>
+    <string name="message_in_avatar">avatar</string>
+    <string name="message_out_sim">sim</string>
+    <string name="message_out_cancel_icon">cancelIcon</string>
 </resources>
