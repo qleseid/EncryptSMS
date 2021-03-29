@@ -46,7 +46,7 @@ class SmsManager
         return getSms(phones, null)
     }
 
-    fun getSms(phones: ArrayList<Phone.pho?>, search: String?): ArrayList<Sms.AppSmsShort>?
+    private fun getSms(phones: ArrayList<Phone.pho?>, search: String?): ArrayList<Sms.AppSmsShort>?
     {
         val res: ArrayList<Sms.AppSmsShort>? = ArrayList()
         for (phone in phones)
@@ -197,7 +197,7 @@ class SmsManager
     private fun getSmsByThreadId(threadId: Int, search: String?): ArrayList<Sms.AppSmsShort>? {
         var where = "thread_id = $threadId"
         if (search != null) {
-            where += " and body LIKE '%" + search.replace("'", "''").toString() + "%'"
+            where += " and body LIKE '%" + search.replace("'", "''") + "%'"
         }
         return getAllSms(where)
     }

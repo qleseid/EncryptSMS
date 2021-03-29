@@ -18,12 +18,13 @@ object CryptoMagic
     private lateinit var pvt_key: PrivateKey
     private lateinit var pub_key: PublicKey
 
-    private var key: SecretKey = SecretKeySpec(
-        Base64.decode("o6D4VFKtqu3Gg0CnohMe9nzbbrI9IHPJgVFentvo5nE=", DEFAULT),
-        "AES")
+    private var key: SecretKey
 
     init
     {
+        key = SecretKeySpec(
+        Base64.decode("o6D4VFKtqu3Gg0CnohMe9nzbbrI9IHPJgVFentvo5nE=", DEFAULT),
+        "AES")
         generateKeys()
         l.i("KEY: ${Base64.encodeToString(key.encoded, DEFAULT)}")
     }
