@@ -72,7 +72,7 @@
         app:layout_constraintBottom_toBottomOf="@id/body"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <com.example.encryptsms.utility.widget.TightTextView
+    <com.lolson.encryptsms.utility.widget.TightTextView
         android:id="@+id/body"
         style="@style/TextPrimary"
         android:layout_width="wrap_content"

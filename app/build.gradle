@@ -7,9 +7,9 @@ android {
     buildToolsVersion "30.0.2"
 
     defaultConfig {
-        applicationId "com.example.encryptsms"
+        applicationId "com.lolson.encryptsms"
         minSdkVersion 19
-        targetSdkVersion 28
+        targetSdkVersion 30
         versionCode 1
         versionName "1.0"
 
@@ -33,18 +33,23 @@ android {
     }
 
     compileOptions {
+//        sourceCompatibility JavaVersion.VERSION_11
+//        targetCompatibility JavaVersion.VERSION_11
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
 
     kotlinOptions {
-        jvmTarget = '1.8'
+//        jvmTarget = JavaVersion.VERSION_11.toString()
+        jvmTarget = "1.8"
     }
+    println( System.getProperty("java.home"))
+//    println( java )
 }
 
 dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.4.31"
     implementation 'androidx.core:core-ktx:1.3.2'
     implementation 'androidx.appcompat:appcompat:1.2.0'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
@@ -60,11 +65,11 @@ dependencies {
     testImplementation "androidx.arch.core:core-testing:2.1.0"
     testImplementation "androidx.test:core-ktx:1.3.0"
 
-    testImplementation "org.robolectric:robolectric:4.2"
+    testImplementation 'org.robolectric:robolectric:4.5.1'
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
     androidTestImplementation 'androidx.test:rules:1.3.0'
     androidTestImplementation 'androidx.test.espresso:espresso-contrib:3.3.0'
-    implementation 'pl.droidsonroids.gif:android-gif-drawable:1.2.22'
+    implementation 'pl.droidsonroids.gif:android-gif-drawable:1.2.23'
     testImplementation 'androidx.test:core:1.3.0'
 }
