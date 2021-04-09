@@ -1,21 +1,14 @@
 package com.lolson.encryptsms
 
-import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.lolson.encryptsms.data.model.Sms
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
 
-@RunWith(AndroidJUnit4::class)
 class MainSharedViewModelTest
 {
-    @get:Rule
-    var instantExecutorRule = InstantTaskExecutorRule()
 
     private var sms1 = Sms.AppSmsShort()
     private var sms2 = Sms.AppSmsShort()
