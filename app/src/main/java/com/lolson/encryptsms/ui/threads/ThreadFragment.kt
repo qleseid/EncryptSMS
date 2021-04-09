@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package com.lolson.encryptsms.ui.threads
 
 import android.graphics.Color

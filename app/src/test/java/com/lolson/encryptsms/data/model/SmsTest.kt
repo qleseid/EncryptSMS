@@ -1,9 +1,8 @@
-package com.example.encryptsms.data.model
+package com.lolson.encryptsms.data.model
 
-import com.lolson.encryptsms.data.model.Sms
-import junit.framework.Assert.assertFalse
-import junit.framework.Assert.assertSame
 import org.junit.After
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertSame
 import org.junit.Before
 import org.junit.Test
 

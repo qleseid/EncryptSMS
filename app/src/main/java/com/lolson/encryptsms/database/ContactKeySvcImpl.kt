@@ -176,6 +176,7 @@ class ContactKeySvcImpl(_context: Context): IContactKeySvc
     /**
      * Local file read method
      */
+    @Suppress("UNCHECKED_CAST")
     private fun readFile(): ArrayList<KeyContent.AppKey>?
     {
         l.d("Key Service:: ReadFile")

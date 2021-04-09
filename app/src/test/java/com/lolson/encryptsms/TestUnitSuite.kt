@@ -1,9 +1,9 @@
-package com.example.encryptsms
+package com.lolson.encryptsms
 
-import com.example.encryptsms.data.model.KeyTest
-import com.example.encryptsms.data.model.PhoneTest
-import com.example.encryptsms.data.model.SecretTest
-import com.example.encryptsms.data.model.SmsTest
+import com.lolson.encryptsms.data.model.KeyTest
+import com.lolson.encryptsms.data.model.PhoneTest
+import com.lolson.encryptsms.data.model.SecretTest
+import com.lolson.encryptsms.data.model.SmsTest
 import org.junit.runner.RunWith
 import org.junit.runners.Suite
 

@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package com.lolson.encryptsms.database
 
 import android.content.ContentValues

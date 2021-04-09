@@ -36,6 +36,7 @@ import com.lolson.encryptsms.utility.LogMe
 /**
  * Main activity with navigation drawer and action bar.
  */
+@Suppress("DEPRECATION")
 open class MainActivity : AppCompatActivity() {
 
     private lateinit var appBarConfiguration: AppBarConfiguration
@@ -55,20 +56,6 @@ open class MainActivity : AppCompatActivity() {
     private lateinit var navController: NavController
 
     private val sharedViewModel: MainSharedViewModel by viewModels()
-
-    // Activity instance to use with receivers
-    private lateinit var inst: MainActivity
-
-    open fun instance(): MainActivity?
-    {
-        return inst
-    }
-
-    override fun onStart()
-    {
-        super.onStart()
-        inst = this
-    }
 
     override fun onCreate(
         savedInstanceState: Bundle?

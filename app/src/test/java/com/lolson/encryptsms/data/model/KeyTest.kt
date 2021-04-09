@@ -1,10 +1,10 @@
-package com.example.encryptsms.data.model
+package com.lolson.encryptsms.data.model
 
 import com.lolson.encryptsms.contents.KeyContent
 import com.lolson.encryptsms.utility.LogMe
-import junit.framework.Assert.assertNotSame
-import junit.framework.Assert.assertSame
 import org.junit.After
+import org.junit.Assert.assertNotSame
+import org.junit.Assert.assertSame
 import org.junit.Before
 import org.junit.Test
 import java.security.KeyPairGenerator

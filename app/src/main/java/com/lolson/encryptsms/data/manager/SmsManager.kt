@@ -1,3 +1,5 @@
+@file:Suppress("SameParameterValue")
+
 package com.lolson.encryptsms.data.manager
 
 import android.content.Context
@@ -16,7 +18,6 @@ class SmsManager(
     //Logger
     var l = LogMe()
     private var _context: Context = baseContext
-    private var _settings: SettingsManager = SettingsManager()
 
     companion object
     {
@@ -104,7 +105,7 @@ class SmsManager(
     ): Boolean
     {
         // Return success
-        var succ = false
+        val succ: Boolean
         val smsM = SmsManager.getDefault()
 
         // Check if app is default; have to manage provider if so
@@ -139,6 +140,7 @@ class SmsManager(
     /**
      * INSERT MESSAGE TO DATABASE
      */
+    @Suppress("ConstantConditionIf")
     private fun insertSms(
         uri: Uri,
         sms: Sms.AppSmsShort
@@ -189,7 +191,7 @@ class SmsManager(
     ): Boolean
     {
         // Return success
-        var succ: Boolean = false
+        var succ = false
         // Message insert values
         val values = contentValuesOf(
             Telephony.Sms.ADDRESS to add,

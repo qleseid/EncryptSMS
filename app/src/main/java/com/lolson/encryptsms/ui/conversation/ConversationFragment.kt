@@ -30,6 +30,7 @@ import com.lolson.encryptsms.utility.widget.TightTextView
 import java.text.SimpleDateFormat
 import java.util.*
 
+@Suppress("DEPRECATION")
 class ConversationFragment : Fragment() {
     /**
      * The conversation of a new message or selected conversation.

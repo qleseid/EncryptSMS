@@ -1,4 +1,4 @@
-package com.example.encryptsms.utility
+package com.lolson.encryptsms.utility
 
 import org.junit.After
 import org.junit.Assert.assertFalse

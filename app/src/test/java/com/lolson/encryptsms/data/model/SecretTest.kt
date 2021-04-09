@@ -1,11 +1,9 @@
-package com.example.encryptsms.data.model
+package com.lolson.encryptsms.data.model
 
 import com.lolson.encryptsms.contents.KeyContent
 import com.lolson.encryptsms.utility.LogMe
-import junit.framework.Assert.assertEquals
-import junit.framework.Assert.assertNotSame
 import org.junit.After
-import org.junit.Assert.assertNotEquals
+import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 import java.security.KeyPair
@@ -185,6 +183,7 @@ class SecretTest
         assertEquals("No Match of key in map", null, map["21"])
     }
 
+    @ExperimentalUnsignedTypes
     @Test
     fun `test encryption and decryption with same key`()
     {
@@ -230,6 +229,7 @@ class SecretTest
         )
     }
 
+    @ExperimentalUnsignedTypes
     @Test
     fun `test encryption with my key and decryption with theirs`()
     {
