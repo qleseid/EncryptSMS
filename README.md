@@ -31,7 +31,7 @@ The <span style="color:blue">**docs**</span> folder contains the running project
 
 [Current Build](./docs/apk)
 
-This project is changing constantly, **USE AT OWN RISK!**
+This project is changing constantly, **##USE AT YOUR OWN RISK!**
 
 # Legal
 
