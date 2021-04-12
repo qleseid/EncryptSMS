@@ -7,7 +7,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".MainActivity">
+    tools:context="com.lolson.encryptsms.MainActivity">
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/messageList"
@@ -42,7 +42,7 @@
         android:id="@+id/composeBar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:constraint_referenced_ids="messageBackground,attachments,attach,message,counter,send" />
+        app:constraint_referenced_ids="messageBackground,attach,message,counter,send" />
 
     <View
         android:id="@+id/messageBackground"
@@ -55,8 +55,8 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@id/send"
         app:layout_constraintStart_toEndOf="@id/attach"
-        app:layout_constraintTop_toTopOf="@id/attachments" />
-
+        app:layout_constraintTop_toTopOf="@id/message" />
+<!--
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/attachments"
         android:layout_width="0dp"
@@ -71,7 +71,7 @@
         app:layout_constraintEnd_toEndOf="@id/messageBackground"
         app:layout_constraintStart_toStartOf="@id/messageBackground"
         tools:listitem="@layout/attachment_image_list_item" />
-
+-->
     <EditText
         android:id="@+id/message"
         style="@style/TextPrimary"

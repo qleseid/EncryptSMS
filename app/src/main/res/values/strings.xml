@@ -2,8 +2,8 @@
     <string name="app_name">Encrypt SMS</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
-    <string name="nav_header_title">Nav</string>
-    <string name="nav_header_subtitle">Navigation option</string>
+    <string name="nav_header_title">Encrypt SMS</string>
+    <string name="nav_header_subtitle">Settings</string>
     <string name="nav_header_desc">Text Nav</string>
     <string name="action_home">Home</string>
 
@@ -91,4 +91,13 @@
     <string name="message_in_avatar">avatar</string>
     <string name="message_out_sim">sim</string>
     <string name="message_out_cancel_icon">cancelIcon</string>
+    <string name="dh_key_status">DH key status:</string>
+    <string name="dh_key_status_loading">loading...</string>
+    <string name="contact_keys_status">Contact keys status:</string>
+    <string name="contact_keys_status_loading">loading...</string>
+    <string name="contacts_keyed">Contacts keyed:</string>
+    <string name="_contact_keyed_amount">0</string>
+    <string name="total_contacts">Total contacts:</string>
+    <string name="_total_contacts_amount">0</string>
+    <string name="splash_screen_image">Splash screen image</string>
 </resources>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest
     xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.encryptsms">
+    package="com.lolson.encryptsms">
 
     <!-- Application needs SMS/MMS permissions -->
     <uses-permission android:name="android.permission.READ_SMS"/>
@@ -37,25 +37,25 @@
         android:theme="@style/AppTheme"
         android:fullBackupContent="@xml/backup_descriptor">
         <activity
-            android:name="com.example.encryptsms.TitleActivity"
-            android:label="@string/title_activity_title"
+            android:name="com.lolson.encryptsms.MainActivity"
+            android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
+
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
-        <activity
-            android:name="com.example.encryptsms.MainActivity"
-            android:label="@string/app_name"
-            android:theme="@style/AppTheme.NoActionBar">
+
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <action android:name="android.intent.action.SEND" />
                 <action android:name="android.intent.action.SENDTO" />
-                <category android:name="android.intent.category.DEFAULT" />
+
+
                 <category android:name="android.intent.category.APP_MESSAGING" />
                 <category android:name="android.intent.category.BROWSABLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+
                 <data android:scheme="sms" />
                 <data android:scheme="smsto" />
                 <data android:scheme="mms" />
@@ -63,7 +63,7 @@
             </intent-filter>
         </activity>
 
-        <receiver android:name="com.example.encryptsms.data.receiver.SmsReceiver"
+        <receiver android:name="com.lolson.encryptsms.data.receiver.SmsReceiver"
             android:permission="android.permission.BROADCAST_SMS">
             <intent-filter >
                 <action android:name="android.provider.Telephony.SMS_DELIVER" />
@@ -71,7 +71,7 @@
         </receiver>
 
         <!-- BroadcastReceiver that listens for incoming MMS messages -->
-        <receiver android:name="com.example.encryptsms.data.receiver.MmsReceiver"
+        <receiver android:name="com.lolson.encryptsms.data.receiver.MmsReceiver"
             android:permission="android.permission.BROADCAST_WAP_PUSH">
             <intent-filter>
                 <action android:name="android.provider.Telephony.WAP_PUSH_DELIVER" />
@@ -80,7 +80,7 @@
         </receiver>
 
 
-        <receiver android:name="com.example.encryptsms.data.receiver.SendStatusReceiver"
+        <receiver android:name="com.lolson.encryptsms.data.receiver.SendStatusReceiver"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.android.messaging.receiver.SendStatusReceiver.MESSAGE_SENT" />
@@ -100,7 +100,7 @@
         </receiver>
 
         <!-- Service that delivers messages from the phone "quick response"-->
-        <service android:name="com.example.encryptsms.data.receiver.HeadlessSmsSendService"
+        <service android:name="com.lolson.encryptsms.data.receiver.HeadlessSmsSendService"
             android:permission="android.permission.SEND_RESPOND_VIA_MESSAGE"
             android:exported="true" >
             <intent-filter>

@@ -20,7 +20,8 @@
         app:layout_constraintHorizontal_chainStyle="packed"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:text="01/24/21 13:34" />
+        tools:text="01/24/21 13:34"
+        tools:ignore="SmallSp" />
 
     <ImageView
         android:id="@+id/sim"
@@ -63,7 +64,7 @@
         tools:listitem="@layout/mms_preview_list_item" />
 
 
-    <com.example.encryptsms.utility.widget.TightTextView
+    <com.lolson.encryptsms.utility.widget.TightTextView
         android:id="@+id/body"
         style="@style/TextPrimary"
         android:layout_width="wrap_content"

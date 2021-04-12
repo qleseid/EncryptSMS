@@ -13,5 +13,6 @@
         android:layout_centerInParent="true"
         android:checked="true"
         android:text=""
-        app:thumbTint="#777373" />
+        app:thumbTint="#777373"
+        app:trackTint="@color/switch_color_selector" />
 </RelativeLayout>

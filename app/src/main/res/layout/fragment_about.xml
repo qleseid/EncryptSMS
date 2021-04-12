@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#DFD4CD"
     android:minWidth="100dp"
     android:minHeight="60dp"
     tools:context=".ui.about.AboutFragment">
@@ -13,48 +14,148 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="32dp"
-        android:layout_marginLeft="32dp"
+        android:layout_marginTop="16dp"
         android:layout_marginEnd="32dp"
-        android:layout_marginRight="32dp"
-        android:layout_marginBottom="16dp"
-        app:layout_constraintBottom_toTopOf="@+id/editTextTextMultiLine"
+        android:textAlignment="center"
+        android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="@tools:sample/full_names" />
 
-    <EditText
+    <ScrollView
         android:id="@+id/editTextTextMultiLine"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         android:layout_marginStart="16dp"
-        android:layout_marginLeft="16dp"
+        android:layout_marginTop="8dp"
         android:layout_marginEnd="16dp"
-        android:layout_marginRight="16dp"
         android:autofillHints=""
-        android:background="#00BCD4"
-        android:ems="10"
-        android:gravity="start|top"
-        android:hint="@string/message"
-        android:inputType="textMultiLine"
+        android:background="#FAFAFA"
         app:layout_constraintBottom_toTopOf="@+id/button_second"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textview_second" />
+        app:layout_constraintTop_toBottomOf="@+id/totalContactsTextView">
+
+        <TextView
+            android:id="@+id/scroll_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:isScrollContainer="false"
+            tools:text="@tools:sample/lorem/random" />
+
+    </ScrollView>
 
     <Button
         android:id="@+id/button_second"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:layout_marginLeft="16dp"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="16dp"
-        android:layout_marginRight="16dp"
         android:layout_marginBottom="16dp"
+        android:background="#FFFFFF"
         android:text="@string/send_email"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/editTextTextMultiLine" />
+
+    <TextView
+        android:id="@+id/dhKeyTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="48dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="8dp"
+        android:text="@string/dh_key_status"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toStartOf="@+id/dhKeyTextViewStatus"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textview_second" />
+
+    <TextView
+        android:id="@+id/dhKeyTextViewStatus"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginEnd="16dp"
+        android:text="@string/dh_key_status_loading"
+        app:layout_constraintBottom_toBottomOf="@+id/dhKeyTextView"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/dhKeyTextView"
+        app:layout_constraintTop_toTopOf="@+id/dhKeyTextView" />
+
+    <TextView
+        android:id="@+id/contactKeyTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="19dp"
+        android:layout_marginStart="48dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:text="@string/contact_keys_status"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toStartOf="@+id/contactKeyTextViewStatus"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/dhKeyTextView" />
+
+    <TextView
+        android:id="@+id/contactKeyTextViewStatus"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginEnd="16dp"
+        android:text="@string/contact_keys_status_loading"
+        app:layout_constraintBottom_toBottomOf="@+id/contactKeyTextView"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/contactKeyTextView"
+        app:layout_constraintTop_toTopOf="@+id/contactKeyTextView" />
+
+    <TextView
+        android:id="@+id/contactKeyTextViewKeyed"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="48dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:text="@string/contacts_keyed"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toStartOf="@+id/contactKeyTextViewKeyedAmount"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/contactKeyTextView" />
+
+    <TextView
+        android:id="@+id/contactKeyTextViewKeyedAmount"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginEnd="16dp"
+        android:text="@string/_contact_keyed_amount"
+        app:layout_constraintBottom_toBottomOf="@+id/contactKeyTextViewKeyed"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/contactKeyTextViewKeyed"
+        app:layout_constraintTop_toTopOf="@+id/contactKeyTextViewKeyed" />
+
+    <TextView
+        android:id="@+id/totalContactsTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="48dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:text="@string/total_contacts"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toStartOf="@+id/totalContactsTextViewAmount"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/contactKeyTextViewKeyed" />
+
+    <TextView
+        android:id="@+id/totalContactsTextViewAmount"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginEnd="16dp"
+        android:text="@string/_total_contacts_amount"
+        app:layout_constraintBottom_toBottomOf="@+id/totalContactsTextView"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/totalContactsTextView"
+        app:layout_constraintTop_toTopOf="@+id/totalContactsTextView" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -2,13 +2,17 @@
   <dictionary name="gangsta">
     <words>
       <w>balancebook</w>
+      <w>contactap</w>
       <w>conver</w>
       <w>convo</w>
       <w>dmsg</w>
       <w>encryptsms</w>
       <w>interactor</w>
+      <w>lolson</w>
       <w>msgs</w>
+      <w>privatekey</w>
       <w>publickey</w>
+      <w>sqlite</w>
       <w>succ</w>
     </words>
   </dictionary>

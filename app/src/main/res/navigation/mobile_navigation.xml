@@ -4,23 +4,28 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/mobile_navigation"
-    app:startDestination="@id/nav_threads">
+    app:startDestination="@id/welcomeFragment">
 
     <fragment
         android:id="@+id/nav_conversations"
-        android:name="com.example.encryptsms.ui.conversation.ConversationFragment"
+        android:name="com.lolson.encryptsms.ui.conversation.ConversationFragment"
         android:label="@string/menu_conversation"
         tools:layout="@layout/activity_conversation_detail" />
 
     <fragment
         android:id="@+id/nav_threads"
-        android:name="com.example.encryptsms.ui.threads.ThreadFragment"
+        android:name="com.lolson.encryptsms.ui.threads.ThreadFragment"
         android:label="@string/menu_threads"
         tools:layout="@layout/fragment_threads" />
 
     <fragment
         android:id="@+id/nav_about"
-        android:name="com.example.encryptsms.ui.about.AboutFragment"
+        android:name="com.lolson.encryptsms.ui.about.AboutFragment"
         android:label="@string/menu_nav_about"
         tools:layout="@layout/fragment_about" />
+    <fragment
+        android:id="@+id/welcomeFragment"
+        android:name="com.lolson.encryptsms.ui.welcome.WelcomeFragment"
+        android:label="fragment_welcome"
+        tools:layout="@layout/fragment_welcome" />
 </navigation>

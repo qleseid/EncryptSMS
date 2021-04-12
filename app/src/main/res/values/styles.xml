@@ -2,9 +2,9 @@
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
         <!-- Customize your theme here. -->
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
+        <item name="colorPrimary">#FF9800</item>
+        <item name="colorPrimaryDark">#FF5722</item>
+        <item name="colorAccent">#FFC107</item>
     </style>
 
     <style name="AppTheme.NoActionBar">
@@ -14,8 +14,8 @@
 
     <style name="AppTheme.NoActionBar.FullScreen">
         <item name="android:windowFullscreen">true</item>
-        <item name="colorPrimary">@color/design_default_color_primary</item>
-        <item name="colorPrimaryDark">@color/design_default_color_primary_dark</item>
+        <item name="colorPrimary">#FF9800</item>
+        <item name="colorPrimaryDark">#FF5722</item>
         <item name="colorAccent">@color/item_color_accent</item>
     </style>
 
@@ -79,7 +79,7 @@
 
     <style name="SwitchCompactStyle">
         <item name="trackTint">@color/switch_color_selector</item>
-        <item name="thumbTint">@color/toolbarLight</item>
+        <item name="thumbTint">#3C3C3C</item>
     </style>
 
 </resources>
