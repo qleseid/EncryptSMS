@@ -28,6 +28,15 @@ android {
             debuggable false
         }
     }
+    
+    signingConfigs {
+        release {
+            storeFile file(RELEASE_STORE_FILE)
+            storePassword System.getenv("KEYSTORE_PASSWORD")
+            keyAlias System.getenv("KEYSTORE_ALIAS")
+            keyPassword System.getenv("KEY_PASSWORD")
+        }
+    }
 
     buildFeatures{
         viewBinding = true
