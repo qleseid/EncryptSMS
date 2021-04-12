@@ -9,6 +9,7 @@ object KeyContent: Serializable {
      */
     data class AppKey(
         var id: String,
+        var sent: Boolean,
         var thread_id: String,
         var publicKey: PublicKey
     ): Serializable {

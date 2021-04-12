@@ -264,6 +264,7 @@ class ContactKeySvcImpl(_context: Context): IContactKeySvc
             //Correct id if needed
             val tempItem = KeyContent.AppKey(
                 i.toString(),
+                list[i].sent,
                 list[i].thread_id,
                 list[i].publicKey
             )
@@ -294,6 +295,7 @@ class ContactKeySvcImpl(_context: Context): IContactKeySvc
         val keyPair = keyGen.genKeyPair()
         return KeyContent.AppKey(
             position.toString(),
+            false,
             position.toString(),
             keyPair.public)
     }

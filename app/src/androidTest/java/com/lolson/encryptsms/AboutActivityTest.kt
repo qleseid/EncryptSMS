@@ -1,6 +1,7 @@
 package com.lolson.encryptsms
 
 
+import android.os.SystemClock
 import android.view.View
 import android.view.ViewGroup
 import androidx.test.espresso.Espresso.onView
@@ -10,10 +11,8 @@ import androidx.test.filters.LargeTest
 import androidx.test.rule.ActivityTestRule
 import androidx.test.rule.GrantPermissionRule
 import androidx.test.runner.AndroidJUnit4
-import com.example.encryptsms.R
 import org.hamcrest.Description
 import org.hamcrest.Matcher
-import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.TypeSafeMatcher
 import org.junit.Rule
@@ -27,7 +26,7 @@ class AboutActivityTest
 
     @Rule
     @JvmField
-    var mActivityTestRule = ActivityTestRule(_root_ide_package_.com.lolson.encryptsms.MainActivity::class.java)
+    var mActivityTestRule = ActivityTestRule(MainActivity::class.java)
 
     @Rule
     @JvmField
@@ -40,6 +39,10 @@ class AboutActivityTest
     @Test
     fun aboutActivityTest()
     {
+        // Splash screen has a delay which must finish before anything else
+        // Without it, resources aren't loaded properly
+        SystemClock.sleep(1000)
+
         val overflowMenuButton = onView(
             allOf(
                 withContentDescription("More options"),
@@ -75,18 +78,40 @@ class AboutActivityTest
                 isDisplayed()))
         navigationMenuItemView.perform(click())
 
-        val appCompatImageButton = onView(
+        val overflowMenuButton2 = onView(
             allOf(
-                withContentDescription("Navigate up"),
+                withContentDescription("More options"),
+                childAtPosition(
+                    childAtPosition(
+                        withId(R.id.toolbar),
+                        2),
+                    0),
+                isDisplayed()))
+        overflowMenuButton2.perform(click())
+
+        val appCompatTextView2 = onView(
+            allOf(
+                withId(R.id.title), withText("Settings"),
+                childAtPosition(
+                    childAtPosition(
+                        withId(R.id.content),
+                        0),
+                    0),
+                isDisplayed()))
+        appCompatTextView2.perform(click())
+
+        val navigationMenuItemView2 = onView(
+            allOf(
+                withId(R.id.nav_threads),
                 childAtPosition(
                     allOf(
-                        withId(R.id.toolbar),
+                        withId(R.id.design_navigation_view),
                         childAtPosition(
-                            withClassName(`is`("com.google.android.material.appbar.AppBarLayout")),
+                            withId(R.id.nav_view),
                             0)),
                     1),
                 isDisplayed()))
-        appCompatImageButton.perform(click())
+        navigationMenuItemView2.perform(click())
     }
 
     private fun childAtPosition(

@@ -14,12 +14,12 @@ class ReceiveNewSms: LiveData<Boolean>()
 
     override fun onActive()
     {
-        l.d("LIVEDATA ONACTIVE: $value")
+        l.d("RNS LIVEDATA ONACTIVE OBSERVER: $value")
     }
 
     override fun onInactive()
     {
-        l.d("LIVEDATA ON***INACTIVE: $value")
+        l.d("RNS LIVEDATA ON***INACTIVE OBSERVER: $value")
     }
 
     companion object {

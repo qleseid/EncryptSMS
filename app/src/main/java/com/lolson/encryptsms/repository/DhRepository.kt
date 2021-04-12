@@ -43,7 +43,7 @@ class DhRepository(_context: Context) {
         _key: KeyPair
     ):Boolean
     {
-        var success = false
+        var success: Boolean
         withContext(Dispatchers.IO){
 
             success = dhDoa.saveKey(_key)

@@ -76,7 +76,7 @@ class SmsRepository(
         msg: Sms.AppSmsShort
     ): Boolean
     {
-        var result = false
+        var result: Boolean
         withContext(Dispatchers.IO){
             smsDoa.send(msg).let { result = it }
         }
@@ -94,7 +94,7 @@ class SmsRepository(
         address: String
     ): Long
     {
-        var result = -1L
+        var result: Long
         withContext(Dispatchers.IO){
             smsDoa.find(address).let { result = it }
         }
@@ -112,7 +112,7 @@ class SmsRepository(
         msg: Sms.AppSmsShort
     ): Boolean
     {
-        var result = false
+        var result: Boolean
         withContext(Dispatchers.IO){
             smsDoa.update(msg).let { result = it }
         }
@@ -130,7 +130,7 @@ class SmsRepository(
         msg: Sms.AppSmsShort
     ): Boolean
     {
-        var result = false
+        var result: Boolean
         withContext(Dispatchers.IO){
             smsDoa.delete(msg).let { result = it }
         }

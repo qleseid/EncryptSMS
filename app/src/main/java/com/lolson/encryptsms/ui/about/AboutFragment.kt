@@ -6,21 +6,28 @@ import android.os.Bundle
 import android.util.Log
 import android.view.*
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.lolson.encryptsms.MainSharedViewModel
 import com.lolson.encryptsms.R
 import com.lolson.encryptsms.databinding.FragmentAboutBinding
+import com.lolson.encryptsms.utility.LogMe
 
 /**
  * The About [Fragment] in the nav drawer welcome activity.
  */
-class AboutFragment : Fragment() {
+class AboutFragment : Fragment()
+{
+    //Logger
+    private var l = LogMe()
 
     // Binding view
     private var _binding: FragmentAboutBinding? = null
     private val binding get() = _binding!!
 
     private val aboutViewModel: AboutViewModel by viewModels()
+    private val aboutSharedViewModel: MainSharedViewModel by activityViewModels()
 
     //Send an email variables
     private val emailType: String = "message/rfc822"
@@ -44,8 +51,26 @@ class AboutFragment : Fragment() {
         _binding = FragmentAboutBinding.inflate(inflater, container, false)
         val rootView = binding.root
 
-        aboutViewModel.text.observe(viewLifecycleOwner, {
-            binding.textviewSecond.text = it
+        // Application info
+        binding.textviewSecond.text = aboutViewModel.appInfo
+
+        // Console output
+        aboutSharedViewModel.text.observe(viewLifecycleOwner, {
+            binding.scrollView.append("$it\n")
+        })
+
+        // Watches the status of the secret keys for the contacts
+        aboutSharedViewModel.contactKeysGood.observe(viewLifecycleOwner, {
+
+            l.d("AA ABOUT STATUS: ${it.first} ${it.second} ${it.third}")
+            binding.contactKeyTextViewStatus.text = if(it.first) "Good" else "Failed"
+            binding.contactKeyTextViewKeyedAmount.text = it.second
+            binding.totalContactsTextViewAmount.text = it.third
+        })
+
+        // Watches the main DH app key status
+        aboutSharedViewModel.dhKeyGood.observe(viewLifecycleOwner, {
+            binding.dhKeyTextViewStatus.text = if(it) "Good" else "Failed"
         })
         return rootView
     }
@@ -96,7 +121,5 @@ class AboutFragment : Fragment() {
     ) {
         super.onCreateOptionsMenu(menu, inflater)
         menu.findItem(R.id.app_bar_switch).isVisible = false
-//        menu.findItem(R.id.action_about).isVisible = false
-//        menu.findItem(R.id.action_no_vis).isVisible = false
     }
 }

@@ -5,7 +5,7 @@ import org.junit.runners.Suite
 
 @RunWith(Suite::class)
 @Suite.SuiteClasses(
-    MainActivityWithEncryptTest::class,
+    MainActivityTest::class,
     FabActivityTest::class,
     AboutActivityTest::class
 

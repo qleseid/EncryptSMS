@@ -1,6 +1,7 @@
 package com.lolson.encryptsms
 
 
+import android.os.SystemClock
 import android.view.View
 import android.view.ViewGroup
 import androidx.test.espresso.Espresso.onView
@@ -11,9 +12,9 @@ import androidx.test.filters.LargeTest
 import androidx.test.rule.ActivityTestRule
 import androidx.test.rule.GrantPermissionRule
 import androidx.test.runner.AndroidJUnit4
-import com.example.encryptsms.R
 import org.hamcrest.Description
 import org.hamcrest.Matcher
+import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.TypeSafeMatcher
 import org.junit.Rule
@@ -27,7 +28,7 @@ class FabActivityTest
 
     @Rule
     @JvmField
-    var mActivityTestRule = ActivityTestRule(_root_ide_package_.com.lolson.encryptsms.MainActivity::class.java)
+    var mActivityTestRule = ActivityTestRule(MainActivity::class.java)
 
     @Rule
     @JvmField
@@ -40,6 +41,10 @@ class FabActivityTest
     @Test
     fun fabActivityTest()
     {
+        // Splash screen has a delay which must finish before anything else
+        // Without it, resources aren't loaded properly
+        SystemClock.sleep(1000)
+
         val floatingActionButton = onView(
             allOf(
                 withId(R.id.fab),
@@ -66,23 +71,13 @@ class FabActivityTest
 
         val appCompatButton = onView(
             allOf(
-                withId(android.R.id.button1), withText("OK"),
-                childAtPosition(
-                    childAtPosition(
-                        withId(R.id.buttonPanel),
-                        0),
-                    3)))
-        appCompatButton.perform(scrollTo(), click())
-
-        val appCompatButton2 = onView(
-            allOf(
                 withId(android.R.id.button2), withText("Cancel"),
                 childAtPosition(
                     childAtPosition(
                         withId(R.id.buttonPanel),
                         0),
                     2)))
-        appCompatButton2.perform(scrollTo(), click())
+        appCompatButton.perform(scrollTo(), click())
 
         val overflowMenuButton = onView(
             allOf(
@@ -108,16 +103,42 @@ class FabActivityTest
 
         val navigationMenuItemView = onView(
             allOf(
-                withId(R.id.nav_threads),
+                withId(R.id.nav_vis),
                 childAtPosition(
                     allOf(
                         withId(R.id.design_navigation_view),
                         childAtPosition(
                             withId(R.id.nav_view),
                             0)),
-                    1),
+                    2),
                 isDisplayed()))
         navigationMenuItemView.perform(click())
+
+        val switchCompat = onView(
+            allOf(
+                withId(R.id.vis_switch_compat),
+                childAtPosition(
+                    allOf(
+                        withId(R.id.vis_switch_rela_lay),
+                        childAtPosition(
+                            withId(R.id.design_menu_item_action_area),
+                            0)),
+                    0),
+                isDisplayed()))
+        switchCompat.perform(click())
+
+        val appCompatImageButton = onView(
+            allOf(
+                withContentDescription("Navigate up"),
+                childAtPosition(
+                    allOf(
+                        withId(R.id.toolbar),
+                        childAtPosition(
+                            withClassName(`is`("com.google.android.material.appbar.AppBarLayout")),
+                            0)),
+                    0),
+                isDisplayed()))
+        appCompatImageButton.perform(click())
     }
 
     private fun childAtPosition(

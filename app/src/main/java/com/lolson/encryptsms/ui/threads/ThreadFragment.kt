@@ -22,7 +22,6 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.lolson.encryptsms.MainSharedViewModel
 import com.lolson.encryptsms.R
 import com.lolson.encryptsms.R.id
-import com.lolson.encryptsms.data.livedata.ReceiveNewSms
 import com.lolson.encryptsms.data.model.Sms
 import com.lolson.encryptsms.databinding.FragmentThreadsBinding
 import com.lolson.encryptsms.ui.conversation.ConversationFragment
@@ -70,6 +69,20 @@ class ThreadFragment : Fragment() {
             requireActivity().findNavController(R.id.nav_host_fragment).navigate(R.id
                 .nav_conversations, bundle)
         }
+
+        //LiveData for RecyclerView
+        threadsSharedViewModel.threads.observe(viewLifecycleOwner, {
+
+            l.d("THREAD MESSAGE LIVE DATA ${it?.size}")
+            // Submit recycler the changed list keys
+            // The runnable ensures the list is done so positioning works correct
+            adapter.submitList(it, kotlinx.coroutines.Runnable {
+                kotlin.run {
+                    adapter.notifyDataSetChanged()
+                    recyclerView.scrollToPosition(0)
+                }
+            })
+        })
         return rootView
     }
 
@@ -82,30 +95,6 @@ class ThreadFragment : Fragment() {
         recyclerView = binding.threadList.converList
 
         setupRecyclerView(recyclerView)
-
-        // Observe data changes from Broadcast Receiver
-        ReceiveNewSms.get().observe(viewLifecycleOwner, {
-
-            l.d("Threads SMS RECEIVER OBSERVER: $it")
-            if (it)
-            {
-                threadsSharedViewModel.refresh(0)
-                ReceiveNewSms.set(false)
-            }
-        })
-
-        //LiveData for RecyclerView
-        threadsSharedViewModel.threads.observe(viewLifecycleOwner, {
-
-            l.d("THREAD MESSAGE LIVE DATA")
-            // Submit recycler the changed list keys
-            // The runnable ensures the list is done so positioning works correct
-            adapter.submitList(it, kotlinx.coroutines.Runnable {
-                kotlin.run {
-                    recyclerView.scrollToPosition(0)
-                }
-            })
-        })
     }
 
     override fun onDestroyView()
@@ -179,7 +168,10 @@ class ThreadFragment : Fragment() {
             holder.icView.setImageDrawable(
                 ResourcesCompat.getDrawable(
                 res,
-                res.getIdentifier("ic_launcher_round","mipmap", parentActivity.activity?.packageName),
+                res.getIdentifier(
+                    "ic_message_black_24dp",
+                    "drawable",
+                    parentActivity.activity?.packageName),
                 null))
 
             //Sets the background color if selected
@@ -196,10 +188,13 @@ class ThreadFragment : Fragment() {
             if (msg.read == 0)
             {
                 holder.readView.visibility = View.VISIBLE
+                holder.numUnreadView.visibility = View.VISIBLE
+                holder.numUnreadView.text = "1"
             }
             else
             {
                 holder.readView.visibility = View.GONE
+                holder.numUnreadView.visibility = View.GONE
             }
 
             with(holder.itemView)
@@ -218,6 +213,7 @@ class ThreadFragment : Fragment() {
             val dateView: TextView = view.findViewById(id.date)
             val icView: ImageView = view.findViewById(id.conver_list_icon)
             val readView: ImageView = view.findViewById(id.unread)
+            val numUnreadView: TextView = view.findViewById(id.number_of_unread)
         }
     }
 

@@ -4,6 +4,8 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.telephony.PhoneNumberUtils
 import android.text.Editable
 import android.text.TextWatcher
@@ -20,6 +22,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SwitchCompat
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.view.get
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.navigation.NavController
 import androidx.navigation.findNavController
@@ -28,6 +31,7 @@ import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import com.google.android.material.navigation.NavigationView
 import com.google.android.material.textfield.TextInputLayout
+import com.lolson.encryptsms.data.livedata.ReceiveNewSms
 import com.lolson.encryptsms.data.model.Phone
 import com.lolson.encryptsms.data.model.Sms
 import com.lolson.encryptsms.databinding.ActivityMainBinding
@@ -37,12 +41,16 @@ import com.lolson.encryptsms.utility.LogMe
  * Main activity with navigation drawer and action bar.
  */
 @Suppress("DEPRECATION")
-open class MainActivity : AppCompatActivity() {
+open class MainActivity : AppCompatActivity()
+{
+    // Activity global used in Conversation Fragment for sending the keys
+//    var alertResult = -14
 
     private lateinit var appBarConfiguration: AppBarConfiguration
 
     //Binding View
     private lateinit var binding: ActivityMainBinding
+    private lateinit var visSwitch: SwitchCompat
 
     //Intent extra strings
     private val dialogError: String = "Invalid Number"
@@ -89,6 +97,29 @@ open class MainActivity : AppCompatActivity() {
         sharedViewModel.title.observe(this, {
             binding.appBarMain.toolbar.title = it
         })
+
+        // Observe data changes from Broadcast Receiver
+        ReceiveNewSms.get().observe(this, {
+
+            l.d("MAIN ACTIVITY SMS RECEIVER OBSERVER: $it")
+            if (it)
+            {
+                sharedViewModel.refresh(0)
+                ReceiveNewSms.set(false)
+            }
+        })
+
+        // Drawer toolbar visibility toggle listener
+        visSwitch = binding.navView.menu[1]
+            .actionView.findViewById(R.id.vis_switch_compat) as SwitchCompat
+
+        visSwitch.setOnCheckedChangeListener { _, isChecked ->
+
+            if (isChecked)  supportActionBar?.show() else supportActionBar?.hide()
+        }
+
+        // Hide app bar during startup
+        visSwitch.isChecked = false
 
         // Check Permissions
         checkSmsPermission()
@@ -147,7 +178,7 @@ open class MainActivity : AppCompatActivity() {
                 binding.drawerLayout.open()
                 true
             }
-            else                                                           -> super.onOptionsItemSelected(item)
+            else -> super.onOptionsItemSelected(item)
         }
     }
 
@@ -162,13 +193,6 @@ open class MainActivity : AppCompatActivity() {
         {
             R.id.nav_vis     -> // App Bar visibility toggle
             {
-                // Drawer toolbar visibility toggle listener
-                val visSwitch = menuItem.actionView.findViewById(R.id.vis_switch_compat) as SwitchCompat
-
-                visSwitch.setOnCheckedChangeListener { _, isChecked ->
-
-                    if (isChecked)  supportActionBar?.show() else supportActionBar?.hide()
-                }
                 visSwitch.toggle()
                 true
             }
@@ -191,18 +215,48 @@ open class MainActivity : AppCompatActivity() {
     }
 
     /**
+     * LAUNCH APP
+     */
+    private fun appLaunch()
+    {
+        //Create splash delay
+        Handler(Looper.getMainLooper()).postDelayed({
+            navController.navigate(R.id.nav_threads)
+            // Hide app bar during startup
+            visSwitch.isChecked = true
+        }, 750)
+    }
+
+    /**
      * CHECK SMS PERMISSION
      */
     private fun checkSmsPermission()
     {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_SMS)
+        if (this.let {
+                ContextCompat.checkSelfPermission(
+                    it, Manifest.permission
+                        .READ_SMS)
+            }
             != PackageManager.PERMISSION_GRANTED)
         {
-            ActivityCompat.requestPermissions(
-                this, arrayOf(
-                    Manifest.permission.READ_SMS,
-                    Manifest.permission.SEND_SMS,
-                    Manifest.permission.READ_CONTACTS), 0)
+            this.let {
+                ActivityCompat.requestPermissions(
+                    it, arrayOf(
+                        Manifest.permission.READ_SMS,
+                        Manifest.permission.SEND_SMS,
+                        Manifest.permission.READ_CONTACTS), 0)
+            }
+        }
+        else
+        {
+            LogMe().i("WELCOME FRAGMENT: APP LAUNCH")
+
+            // Launch background data gathering
+            sharedViewModel.getAllThreads()
+
+            // Start the app on its way after getting permission
+            appLaunch()
+
         }
     }
 
@@ -294,5 +348,45 @@ open class MainActivity : AppCompatActivity() {
 //                TODO("Nothing to implement")
             }
         })
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray)
+    {
+        LogMe().i("WELCOME: ACTIVITY")
+        // Make sure it's our original READ_CONTACTS request
+        when (requestCode)
+        {
+            1    ->
+            {
+                if (grantResults.isNotEmpty() &&
+                    grantResults[0] == PackageManager.PERMISSION_GRANTED)
+                {
+                    Toast.makeText(this, "Read SMS permission granted", Toast.LENGTH_SHORT).show()
+
+                    // Launch background data gathering
+                    sharedViewModel.getAllThreads()
+
+                    // Start the app on its way after getting permission
+                    appLaunch()
+                }
+                else
+                {
+                    Toast.makeText(this, "Read SMS permission denied", Toast.LENGTH_SHORT).show()
+                }
+            }
+            else ->
+            {
+                super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+                // Launch background data gathering
+                sharedViewModel.getAllThreads()
+
+                // Start the app on its way after getting permission
+                appLaunch()
+            }
+        }
     }
 }

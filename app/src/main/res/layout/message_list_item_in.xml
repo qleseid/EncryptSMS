@@ -19,7 +19,8 @@
         app:layout_constraintHorizontal_chainStyle="packed"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:text="01/24/21 13:34" />
+        tools:text="01/24/21 13:34"
+        tools:ignore="SmallSp" />
 
     <ImageView
         android:id="@+id/sim"

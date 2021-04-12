@@ -25,7 +25,9 @@ import com.lolson.encryptsms.data.livedata.ReceiveNewSms
 import com.lolson.encryptsms.data.model.Phone
 import com.lolson.encryptsms.data.model.Sms
 import com.lolson.encryptsms.databinding.ActivityConversationDetailBinding
+import com.lolson.encryptsms.ui.threads.ThreadFragment
 import com.lolson.encryptsms.utility.LogMe
+import com.lolson.encryptsms.utility.SendKeyToContact
 import com.lolson.encryptsms.utility.widget.TightTextView
 import java.text.SimpleDateFormat
 import java.util.*
@@ -63,6 +65,15 @@ class ConversationFragment : Fragment() {
                 convoSharedViewModel.tempSms = tThread
                 convoSharedViewModel.draftSms = tThread
 
+                convoSharedViewModel.checkForEncryptionKey(tThread.thread_id).let { it1 ->
+                    if (!it1)
+                    {
+                        context?.let {it2 ->
+                            SendKeyToContact(it2, convoSharedViewModel).showAlertWithTextInput()
+                        }
+                    }
+                }
+
                 // Get all the messages attached to the tempSms address
                 convoSharedViewModel.getAllMessages()
             }
@@ -96,10 +107,12 @@ class ConversationFragment : Fragment() {
             }
         }
 
+        // Shows alert box to input a number
         activity?.findViewById<Toolbar>(R.id.toolbar)?.setOnClickListener{
             (activity as MainActivity).showAlertWithTextInput()
         }
 
+        // Message can't be sent unless there is a valid number and some text
         binding.message.addTextChangedListener(object: TextWatcher{
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int)
             {
@@ -111,15 +124,16 @@ class ConversationFragment : Fragment() {
                 binding.send.isClickable = count > 0 && Phone.pho().isCellPhoneNumber(
                     convoSharedViewModel.tempSms?.address)!!
 
+                // TODO:: fix this because it toggles the switch a bunch
                 // Check if contact has a encryption key by thread_id
-                convoSharedViewModel.tempSms?.thread_id?.let{
-
-                    convoSharedViewModel.checkForEncryptionKey(it)}.let{
-                    if (it != null)
-                    {
-                        convoSharedViewModel.setEncryptedToggle(it)
-                    }
-                }
+//                convoSharedViewModel.tempSms?.thread_id?.let{
+//
+//                    convoSharedViewModel.checkForEncryptionKey(it)}.let{
+//                    if (it != null)
+//                    {
+//                        convoSharedViewModel.setEncryptedToggle(it)
+//                    }
+//                }
             }
 
             override fun afterTextChanged(s: Editable?)
@@ -129,10 +143,41 @@ class ConversationFragment : Fragment() {
 
         })
 
+        // Send button with view cleanup logic
         binding.send.setOnClickListener{
 
             val msg = binding.message.text.toString()
 
+//            when(val rsl = (activity as MainActivity).alertResult)
+//            {
+//                0    -> // send plain-text and invite
+//                {
+//                    l.d("SEND BUTTON WITH ALERT RESULT 0")
+//
+//                    // Reset value so you don't send a gagillion invites
+//                    (activity as MainActivity).alertResult = -13
+//
+//                    // Send an invite message
+//                    convoSharedViewModel.sendSmsInviteMessage()
+//
+//                    // Send the message
+//                    convoSharedViewModel.sendSmsMessage(msg)
+//                }
+//                1    -> // send plain-text
+//                {
+//                    l.d("SEND BUTTON WITH ALERT RESULT 1")
+//
+//                    // Send the message
+//                    convoSharedViewModel.sendSmsMessage(msg)
+//                }
+//                else -> // cancel in dialog so nothing at this time
+//                {
+//                    l.d("SEND BUTTON WITH ALERT RESULT: $rsl")
+//
+//                    // Send the message
+//                    convoSharedViewModel.sendSmsMessage(msg)
+//                }
+//            }
             // Send the message
             convoSharedViewModel.sendSmsMessage(msg)
 
@@ -141,6 +186,7 @@ class ConversationFragment : Fragment() {
             keyBoard.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0)
         }
 
+        // Send button is turned off at initialization
         binding.send.isClickable = false
 
         // Sets the LiveData and triggers switch to return to set state in Main Activity Menu
@@ -164,12 +210,11 @@ class ConversationFragment : Fragment() {
             {
                 l.d("Conversation SMS RECEIVER OBSERVER: $it")
                 convoSharedViewModel.refresh(1)
-                convoSharedViewModel.refresh(0)
                 ReceiveNewSms.set(false)
             }
         })
 
-        //LiveData for RecyclerView
+        // LiveData for RecyclerView
         convoSharedViewModel.messages.observe(viewLifecycleOwner, {
 
             l.d("CONVERSATION MESSAGE LIVE DATA")
@@ -183,7 +228,7 @@ class ConversationFragment : Fragment() {
 
         setupRecyclerView(recyclerView)
 
-        // Triggers a response when data change is invoked
+        // Triggers a response when data change is invoked by long hold on text
         adapter.registerAdapterDataObserver(object: RecyclerView.AdapterDataObserver()
         {
             override fun onChanged()
@@ -232,7 +277,7 @@ class ConversationFragment : Fragment() {
     class SimpleConvoRecyclerViewAdapter(
         private val parentActivity: ConversationFragment
     ) :
-        ListAdapter<Sms.AppSmsShort, SimpleConvoRecyclerViewAdapter.ViewHolder>(ItemDiffCallback())
+        ListAdapter<Sms.AppSmsShort, SimpleConvoRecyclerViewAdapter.ViewHolder>(ThreadFragment.ItemDiffCallback())
     {
         private val onLongClickListener: View.OnLongClickListener
 

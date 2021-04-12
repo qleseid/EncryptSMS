@@ -45,6 +45,7 @@ class SecretTest
             list.add(
                 KeyContent.AppKey(
                     "$con",
+                    false,
                     "$con",
                     k.public
                 )

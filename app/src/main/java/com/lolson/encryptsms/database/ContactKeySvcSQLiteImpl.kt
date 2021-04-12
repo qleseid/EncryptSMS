@@ -31,6 +31,7 @@ class ContactKeySvcSQLiteImpl(
         private const val SQL_CREATE_ENTRIES =
             "CREATE TABLE ${KeySQLiteContract.KeyEntry.TABLE_NAME} (" +
                     "${BaseColumns._ID} INTEGER PRIMARY KEY," +
+                    "${KeySQLiteContract.KeyEntry.COLUMN_NAME_SENT} INTEGER DEFAULT 0," +
                     "${KeySQLiteContract.KeyEntry.COLUMN_NAME_ID} TEXT," +
                     "${KeySQLiteContract.KeyEntry.COLUMN_NAME_PUBLICKEY} BLOB)"
 
@@ -95,6 +96,7 @@ class ContactKeySvcSQLiteImpl(
         //Projection specifies which columns to read from database
         val projection = arrayOf(
             BaseColumns._ID,
+            KeySQLiteContract.KeyEntry.COLUMN_NAME_SENT,
             KeySQLiteContract.KeyEntry.COLUMN_NAME_ID,
             KeySQLiteContract.KeyEntry.COLUMN_NAME_PUBLICKEY)
 
@@ -113,8 +115,9 @@ class ContactKeySvcSQLiteImpl(
         {
             val tempI = KeyContent.AppKey(
                 cursor.getString(0),                 // key primary id
-                cursor.getString(1),                 // thread id
-                publicKeyGen(cursor.getBlob(2))      // public key
+                (cursor.getInt(1) == 1),             // sent boolean
+                cursor.getString(2),                 // thread id
+                publicKeyGen(cursor.getBlob(3))      // public key
             )
             tempList.add(tempI)
             cursor.moveToNext()
@@ -146,8 +149,9 @@ class ContactKeySvcSQLiteImpl(
         //Create a new map of values; column names are the keys
         val value = ContentValues()
             .apply {
-                put(
-                    KeySQLiteContract.KeyEntry.COLUMN_NAME_ID,
+                put(KeySQLiteContract.KeyEntry.COLUMN_NAME_SENT,
+                    key.sent)
+                put(KeySQLiteContract.KeyEntry.COLUMN_NAME_ID,
                     key.thread_id)
                 put(KeySQLiteContract.KeyEntry.COLUMN_NAME_PUBLICKEY,
                     encodePublicKey(key.publicKey))
@@ -186,6 +190,8 @@ class ContactKeySvcSQLiteImpl(
         //Put conversation values in content
         val value = ContentValues()
             .apply {
+                put(KeySQLiteContract.KeyEntry.COLUMN_NAME_SENT,
+                    key.sent)
                 put(KeySQLiteContract.KeyEntry.COLUMN_NAME_ID,
                     key.thread_id)
                 put(KeySQLiteContract.KeyEntry.COLUMN_NAME_PUBLICKEY,

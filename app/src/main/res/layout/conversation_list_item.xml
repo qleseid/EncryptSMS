@@ -25,7 +25,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0"
-        tools:srcCompat="@tools:sample/avatars[3]" />
+        tools:srcCompat="@drawable/ic_message_black_24dp" />
 
     <TextView
         android:id="@+id/title"
@@ -61,8 +61,8 @@
 
     <ImageView
         android:id="@+id/unread"
-        android:layout_width="23dp"
-        android:layout_height="19dp"
+        android:layout_width="26dp"
+        android:layout_height="22dp"
         android:contentDescription="@string/UnreadCircle"
         android:paddingStart="8dp"
         android:paddingTop="2dp"
@@ -84,5 +84,18 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="100"
         tools:text="Oct 11" />
+
+    <TextView
+        android:id="@+id/number_of_unread"
+        android:layout_width="18dp"
+        android:layout_height="20dp"
+        android:ems="10"
+        android:textAlignment="center"
+        android:textColor="#38FF40"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="@+id/unread"
+        app:layout_constraintEnd_toEndOf="@+id/unread"
+        app:layout_constraintTop_toTopOf="@+id/unread"
+        tools:text="6" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -360,12 +360,21 @@ class DhKeySvcSQLiteImpl(
         data: ByteArray
     ):ByteArray
     {
-//        l.d("START ENCRYPT RSA: ${data.size} ${encodeToString(data, DEFAULT).length} ::" +
-//                encodeToString(data, DEFAULT))
+        l.d("START ENCRYPT RSA: ${data.size} ${encodeToString(data, DEFAULT).length}")
 
         val byteSlices = ArrayList<ByteArray>()
-        byteSlices.add(data.sliceArray(0..405))
-        byteSlices.add(data.sliceArray(406 until data.size))
+
+        try
+        {
+            byteSlices.add(data.sliceArray(0..405))
+            byteSlices.add(data.sliceArray(406 until data.size))
+        }
+        catch (e: java.lang.Exception)
+        {
+            byteSlices.add(data.sliceArray(data.indices))
+        }
+//        byteSlices.add(data.sliceArray(0..405))
+//        byteSlices.add(data.sliceArray(406 until data.size))
 
 
         val publicKey = keyStore.getCertificate(KEY_STORE_NAME).publicKey
@@ -397,8 +406,7 @@ class DhKeySvcSQLiteImpl(
         data: ByteArray
     ):ByteArray
     {
-//        l.d("START DECRYPT RSA: ${data.size}  ${encodeToString(data, DEFAULT).length} :: ${encodeToString
-//            (data, DEFAULT)}")
+        l.d("START DECRYPT RSA: ${data.size}  ${encodeToString(data, DEFAULT).length}")
 
         val byteSlices = ArrayList<ByteArray>()
         try
@@ -406,7 +414,10 @@ class DhKeySvcSQLiteImpl(
             byteSlices.add(data.sliceArray(0..511))
             byteSlices.add(data.sliceArray(512 until data.size))
         }
-        catch (e: java.lang.Exception){}
+        catch (e: java.lang.Exception)
+        {
+            byteSlices.add(data.sliceArray(data.indices))
+        }
 
         val privateKeyEntry = keyStore.getEntry(KEY_STORE_NAME, null) as KeyStore.PrivateKeyEntry
         val privateKey = privateKeyEntry.privateKey

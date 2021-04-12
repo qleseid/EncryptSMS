@@ -25,11 +25,13 @@ class KeyTest
     private lateinit var map: Map<String, Int>
     private  var key1 = KeyContent.AppKey(
         "1",
+        false,
         "21",
         keyPair.public
     )
     private  var key2 = KeyContent.AppKey(
         "2",
+        false,
         "32",
         keyPair.public
     )

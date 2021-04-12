@@ -62,7 +62,7 @@ class ContactsKeyRepository(_context: Context)
         _key: KeyContent.AppKey
     ):Boolean
     {
-        var success = false
+        var success: Boolean
 
         withContext(Dispatchers.IO){
             success = contactKeyDoa.update(_key)
@@ -78,7 +78,7 @@ class ContactsKeyRepository(_context: Context)
         _key: KeyContent.AppKey
     ):Boolean
     {
-        var success = false
+        var success: Boolean
 
         withContext(Dispatchers.IO){
             success = contactKeyDoa.delete(_key)
