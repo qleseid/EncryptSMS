@@ -22,17 +22,19 @@ class KeyTest
     private lateinit var key: SecretKey
 
     private val list = ArrayList<KeyContent.AppKey>()
-    private lateinit var map: Map<String, Int>
+    private lateinit var map: Map<Long, Int>
     private  var key1 = KeyContent.AppKey(
-        "1",
+        1,
         false,
-        "21",
+        1L,
+        21,
         keyPair.public
     )
     private  var key2 = KeyContent.AppKey(
-        "2",
+        2,
         false,
-        "32",
+        2L,
+        32,
         keyPair.public
     )
 
@@ -59,8 +61,8 @@ class KeyTest
     @Test
     fun `check map functionality`()
     {
-        assertSame("Map to first index", 0, map["21"])
-        assertNotSame("Map to second index but get first", 0, map["32"])
+        assertSame("Map to first index", 0, map[21])
+        assertNotSame("Map to second index but get first", 0, map[32])
     }
 
     @Test
@@ -80,15 +82,15 @@ class KeyTest
     @Test
     fun `test indexing of array on thread id`()
     {
-        assertSame("Index Int should return 1", "1", list[map["21"] ?: error("")].id)
-        assertNotSame("Index Int should be different from 1", "-1", list[map["21"] ?: error("")].id)
+        assertSame("Index Int should return 1", 1, list[map[21] ?: error("")].id)
+        assertNotSame("Index Int should be different from 1", "-1", list[map[21] ?: error("")].id)
     }
 
     @Test
     fun `test map return if no match`()
     {
-        assertSame("Match in map for key 1", 0, map["21"])
-        assertSame("No Match of key in map", null, map["1"])
+        assertSame("Match in map for key 1", 0, map[21])
+        assertSame("No Match of key in map", null, map[1])
     }
 
     @Test

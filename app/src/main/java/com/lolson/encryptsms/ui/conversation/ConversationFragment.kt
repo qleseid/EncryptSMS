@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.telephony.PhoneNumberUtils
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Log
 import android.view.*
 import android.view.inputmethod.InputMethodManager
 import android.widget.TextView
@@ -18,7 +17,6 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.lolson.encryptsms.MainActivity
 import com.lolson.encryptsms.MainSharedViewModel
 import com.lolson.encryptsms.R
 import com.lolson.encryptsms.data.livedata.ReceiveNewSms
@@ -27,7 +25,6 @@ import com.lolson.encryptsms.data.model.Sms
 import com.lolson.encryptsms.databinding.ActivityConversationDetailBinding
 import com.lolson.encryptsms.ui.threads.ThreadFragment
 import com.lolson.encryptsms.utility.LogMe
-import com.lolson.encryptsms.utility.SendKeyToContact
 import com.lolson.encryptsms.utility.widget.TightTextView
 import java.text.SimpleDateFormat
 import java.util.*
@@ -61,21 +58,20 @@ class ConversationFragment : Fragment() {
             if (it.containsKey(ARG_ITEM_ID)) {
                 val tThread = it.getSerializable(ARG_ITEM_ID) as Sms.AppSmsShort
 
+                // Cleanup old messages from previous thread click
+                convoSharedViewModel.cleanUpMessages()
+
                 // Store thread info from clicked thread
                 convoSharedViewModel.tempSms = tThread
                 convoSharedViewModel.draftSms = tThread
 
-                convoSharedViewModel.checkForEncryptionKey(tThread.thread_id).let { it1 ->
-                    if (!it1)
-                    {
-                        context?.let {it2 ->
-                            SendKeyToContact(it2, convoSharedViewModel).showAlertWithTextInput()
-                        }
-                    }
+                if (tThread.thread_id != -1L)
+                {
+                    // Launch alert dialog for invite helper
+//                    convoSharedViewModel.alertHelper(0)
+                    // Get all the messages attached to the tempSms address
+                    convoSharedViewModel.getAllMessages()
                 }
-
-                // Get all the messages attached to the tempSms address
-                convoSharedViewModel.getAllMessages()
             }
         }
     }
@@ -109,7 +105,7 @@ class ConversationFragment : Fragment() {
 
         // Shows alert box to input a number
         activity?.findViewById<Toolbar>(R.id.toolbar)?.setOnClickListener{
-            (activity as MainActivity).showAlertWithTextInput()
+            convoSharedViewModel.alertHelper(2, null)
         }
 
         // Message can't be sent unless there is a valid number and some text
@@ -123,17 +119,6 @@ class ConversationFragment : Fragment() {
             {
                 binding.send.isClickable = count > 0 && Phone.pho().isCellPhoneNumber(
                     convoSharedViewModel.tempSms?.address)!!
-
-                // TODO:: fix this because it toggles the switch a bunch
-                // Check if contact has a encryption key by thread_id
-//                convoSharedViewModel.tempSms?.thread_id?.let{
-//
-//                    convoSharedViewModel.checkForEncryptionKey(it)}.let{
-//                    if (it != null)
-//                    {
-//                        convoSharedViewModel.setEncryptedToggle(it)
-//                    }
-//                }
             }
 
             override fun afterTextChanged(s: Editable?)
@@ -148,36 +133,6 @@ class ConversationFragment : Fragment() {
 
             val msg = binding.message.text.toString()
 
-//            when(val rsl = (activity as MainActivity).alertResult)
-//            {
-//                0    -> // send plain-text and invite
-//                {
-//                    l.d("SEND BUTTON WITH ALERT RESULT 0")
-//
-//                    // Reset value so you don't send a gagillion invites
-//                    (activity as MainActivity).alertResult = -13
-//
-//                    // Send an invite message
-//                    convoSharedViewModel.sendSmsInviteMessage()
-//
-//                    // Send the message
-//                    convoSharedViewModel.sendSmsMessage(msg)
-//                }
-//                1    -> // send plain-text
-//                {
-//                    l.d("SEND BUTTON WITH ALERT RESULT 1")
-//
-//                    // Send the message
-//                    convoSharedViewModel.sendSmsMessage(msg)
-//                }
-//                else -> // cancel in dialog so nothing at this time
-//                {
-//                    l.d("SEND BUTTON WITH ALERT RESULT: $rsl")
-//
-//                    // Send the message
-//                    convoSharedViewModel.sendSmsMessage(msg)
-//                }
-//            }
             // Send the message
             convoSharedViewModel.sendSmsMessage(msg)
 
@@ -208,7 +163,7 @@ class ConversationFragment : Fragment() {
         ReceiveNewSms.get().observe(viewLifecycleOwner, {
             if (it)
             {
-                l.d("Conversation SMS RECEIVER OBSERVER: $it")
+                l.d("CF:: SMS RECEIVER OBSERVER: $it")
                 convoSharedViewModel.refresh(1)
                 ReceiveNewSms.set(false)
             }
@@ -217,7 +172,6 @@ class ConversationFragment : Fragment() {
         // LiveData for RecyclerView
         convoSharedViewModel.messages.observe(viewLifecycleOwner, {
 
-            l.d("CONVERSATION MESSAGE LIVE DATA")
             // Submit recycler the changed list keys
             adapter.submitList(it, kotlinx.coroutines.Runnable {
                 kotlin.run {
@@ -260,7 +214,8 @@ class ConversationFragment : Fragment() {
         inflater: MenuInflater
     ) {
         super.onCreateOptionsMenu(menu, inflater)
-        l.d("Conversation FRAGMENT: Option menu")
+        menu.findItem(R.id.action_invite).isVisible = true
+        l.d("CF:: Option menu")
     }
 
     private fun setupRecyclerView(
@@ -281,10 +236,9 @@ class ConversationFragment : Fragment() {
     {
         private val onLongClickListener: View.OnLongClickListener
 
-        init {
-            Log.d("ConvoRecycle init:","*****************************************")
-
-            onLongClickListener = View.OnLongClickListener {v ->
+        init
+        {
+            onLongClickListener = View.OnLongClickListener{v ->
                 val item = "Delete:: ${v.tag as String}"
 
                 //Set the icon when clicked
@@ -298,8 +252,8 @@ class ConversationFragment : Fragment() {
         override fun onCreateViewHolder(
             parent: ViewGroup,
             viewType: Int
-        ): ViewHolder {
-
+        ): ViewHolder
+        {
             // This is set to out initially
             var vh = ViewHolder(LayoutInflater.from(parent.context)
                 .inflate(R.layout.message_list_item_out, parent, false))
@@ -335,9 +289,45 @@ class ConversationFragment : Fragment() {
 
 //            holder.idView.text = PhoneNumberUtils.formatNumber(msg.address)
             holder.attachView.isVisible = false
-            holder.simView.text = position.toString()
+            holder.simView.text = position.plus(1).toString()
             holder.bodyView.text = msg.body
-            holder.dateView.text = SimpleDateFormat("MMM/dd/yy HH:mm", Locale.getDefault()).format(msg.date)
+
+            // First date gets full format
+            if (position > 0)
+            {
+                val current = SimpleDateFormat(
+                    "MMM/dd/yy",
+                    Locale.getDefault()
+                ).format(getItem(position).date)
+
+                val previous = SimpleDateFormat(
+                    "MMM/dd/yy",
+                    Locale.getDefault()
+                ).format(getItem(position - 1).date)
+
+                // Print date only once per day, time only otherwise
+                if (current == previous)
+                {
+                    holder.dateView.text = SimpleDateFormat(
+                        "HH:mm",
+                        Locale.getDefault()
+                    ).format(msg.date)
+                }
+                else
+                {
+                    holder.dateView.text = SimpleDateFormat(
+                        "MMM/dd/yy HH:mm",
+                        Locale.getDefault()
+                    ).format(msg.date)
+                }
+            }
+            else
+            {
+                holder.dateView.text = SimpleDateFormat(
+                    "MMM/dd/yy HH:mm",
+                    Locale.getDefault()
+                ).format(msg.date)
+            }
 
             // Sets the message status
             when(msg.status){

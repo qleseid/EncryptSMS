@@ -11,7 +11,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
+        android:width="48dp"
+        android:height="48dp"
         android:checked="true"
+        android:clickable="false"
         android:text=""
         app:thumbTint="#777373"
         app:trackTint="@color/switch_color_selector" />

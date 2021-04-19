@@ -36,7 +36,7 @@ class SmsSvcImpl(
         phones: ArrayList<Phone.pho?>
     ): ArrayList<Sms.AppSmsShort>?
     {
-        l.d("In SMS Service Implement GET ALL MESSAGES")
+        l.d("SSI:: In SMS Service Implement GET ALL MESSAGES")
 
         return smsM.getSms(phones)
     }

@@ -3,6 +3,7 @@
 package com.lolson.encryptsms.data.manager
 
 import android.content.Context
+import android.database.Cursor
 import android.net.Uri
 import android.provider.Telephony
 import android.telephony.SmsManager
@@ -28,12 +29,13 @@ class SmsManager(
         private const val SORT_ORDER = "date ASC"
 
 
-//        private val THREADS_CONTENT_URI: Uri = Uri.parse("content://mms-sms/conversations/")
+        private val THREADS_CONTENT_URI: Uri = Uri.parse("content://mms-sms/conversations/")
+        private val THREAD_COLUMN = arrayOf("*")
         //        private val SMS_CONTENT_URI: Uri = Telephony.Sms.CONTENT_URI.buildUpon().build()
 //    private val SMS_INBOX_CONTENT_URI: Uri = Uri.withAppendedPath(SMS_CONTENT_URI, "inbox")
 //    private val SMS_SENTBOX_CONTENT_URI: Uri = Uri.withAppendedPath(SMS_CONTENT_URI, "sent")
 //    private val COLUMNS = arrayOf("_id", "thread_id")
-        //        private const val SORT_ORDER_DESC = "date DESC"
+                private const val SORT_ORDER_DESC = "date DESC"
         //        private const val COUNT_BUILD = " limit 500; GROUP BY thead_id HAVING count(thread_id) > 0"
 //        private val THREADS_CONTENT_URI_SMALL: Uri = Uri.parse("content://sms/conversations")
         //        private val THREADS_CONTENT_URI: Uri = Uri.parse("content://service-state/")
@@ -90,7 +92,7 @@ class SmsManager(
 
         if (res?.size!! > 0)
         {
-            l.d("SMS-MANAGER: GET THREAD ID ${res.size} ${res[0].thread_id}")
+            l.d("SMSM:: GET THREAD ID ${res.size} ${res[0].thread_id}")
             succ = res[0].thread_id
         }
         return succ
@@ -111,7 +113,7 @@ class SmsManager(
         // Check if app is default; have to manage provider if so
         if (Telephony.Sms.getDefaultSmsPackage(_context) == _context.packageName)
             {
-                l.d("SMS-MANAGER: SEND SMS AS DEFAULT")
+                l.d("SMSM:: SEND SMS AS DEFAULT")
                 smsM.sendMultipartTextMessage(
                     sms.address,
                     null,
@@ -123,7 +125,7 @@ class SmsManager(
             }
         else  // The system handles the provider if not default
         {
-            l.d("SMS-MANAGER: SEND SMS AS ANOTHER APP")
+            l.d("SMSM:: SEND SMS AS ANOTHER APP")
             smsM.sendMultipartTextMessage(
                 sms.address,
                 null,
@@ -173,7 +175,7 @@ class SmsManager(
             uri,
             values
         )?.lastPathSegment?.toLong()?.let {
-            l.d("SMS-MANAGER: INSERT SMS:: $it")
+            l.d("SMSM:: INSERT SMS:: $it")
             succ = true
         }
 
@@ -204,7 +206,7 @@ class SmsManager(
             SMS_CONTENT_URI,      // content://sms
             values
         )?.lastPathSegment?.toLong()?.let {
-            l.d("SMS-MANAGER: INSERT RECEIVED SMS:: $it")
+            l.d("SMSM:: INSERT RECEIVED SMS:: $it")
             succ = true
         }
         return succ
@@ -215,7 +217,8 @@ class SmsManager(
      */
     fun getConvoThreads(): ArrayList<Sms.AppSmsShort>?
     {
-        return  getAllSmsThreads()
+//        return  getAllSmsThreads(null)
+        return getAllSmsThreads()
     }
 
     /**
@@ -226,7 +229,7 @@ class SmsManager(
         // Timing of query, 40,000 message ~ 800 - 1200ms
         var nt: Long
         val t = System.currentTimeMillis()
-        l.d("SMS MANAGER: GET ALL SMS THREAD ********** $t")
+        l.d("SMSM:: GET ALL SMS THREAD ********** ${t}ms")
 
         val res = ArrayList<Sms.AppSmsShort>()
         val threadMap = mutableMapOf<Long, Long>()
@@ -242,7 +245,7 @@ class SmsManager(
         )
         if (c != null)
         {
-            l.d("^^^^^^^^^^^ NEW SMS THREAD ^^^^^^^^^^^^^^^ ${c.count}")
+            l.d("SMSM:: ^^^^^^^^^^^ NEW SMS THREAD ^^^^^^^^^^^^^^^ total msgs: ${c.count}")
 
             var hasData = c.moveToFirst()
             while (hasData)
@@ -253,8 +256,7 @@ class SmsManager(
             }
 
             nt = System.currentTimeMillis()
-            l.d("^^^^^^^^^^^ MAP BUILT, BUILDING THREAD ^^^^^^^^^^^^^^^${nt - t} :: ${threadMap
-                .size}")
+            l.d("SMSM:: ^^^ MAP BUILT, BUILDING THREAD ^^^ size: ${threadMap.size} :: ${nt - t}ms")
             hasData = c.moveToFirst()
             while (hasData)
             {
@@ -279,7 +281,7 @@ class SmsManager(
             c.close()
         }
         nt = System.currentTimeMillis()
-        l.i("SMS MANAGER: GET ALL SMS ***THREAD*** RETURN SIZE: ${nt - t} :: ${res.size}")
+        l.i("SMSM:: GET ALL SMS ***THREAD*** RETURN SIZE: ${res.size} :: ${nt - t}ms")
         return res
     }
 
@@ -292,7 +294,7 @@ class SmsManager(
     ): ArrayList<Sms.AppSmsShort>?
     {
         val t = System.currentTimeMillis()
-        l.d("SMS MANAGER: Get ALL SMs: $where")
+        l.d("SMSM:: Get ALL SMs: $where")
 
         val res = ArrayList<Sms.AppSmsShort>()
         val c = _context.contentResolver.query(
@@ -304,19 +306,9 @@ class SmsManager(
         )
         if (c != null)
         {
-//            for (i in 0 until c.columnCount)
-//            {
-//                l.d(
-//                    "SMS MANAGER: Get ALL SMS COLUMNS: ${c.getColumnName(i)} ${
-//                        c.getColumnIndex(
-//                            c.getColumnName(
-//                                i
-//                            )
-//                        )
-//                    }"
-//                )
-//               // l.d("SMS MANAGER: Get ALL SMS COLUMNS: ${c.getIntOrNull(c.getColumnIndex(c.getColumnName(i)))}")
-//            }
+            // Print columns for debugging each SDK
+//            columnDebug(c)
+
             var hasData = c.moveToFirst()
             while (hasData)
             {
@@ -337,7 +329,7 @@ class SmsManager(
                 sms.body = c.getString(c.getColumnIndex("body"))
                 sms.service_center = c.getString(c.getColumnIndex("service_center"))
                 sms.locked = c.getInt(c.getColumnIndex("locked"))
-                sms.sub_id = c.getInt(c.getColumnIndex("sub_id"))
+//                sms.sub_id = c.getInt(c.getColumnIndex("sub_id"))
                 sms.error_code = c.getInt(c.getColumnIndex("error_code"))
 //                    c.getString(c.getColumnIndex("creator"))// Kit-Kat doesn't support
                 sms.seen = c.getInt(c.getColumnIndex("seen"))
@@ -350,7 +342,7 @@ class SmsManager(
             c.close()
         }
         val nt: Long = System.currentTimeMillis()
-        l.i("SMS MANAGER: Get ALL SMS RETURN SIZE: ${nt - t} ::  ${res.size}")
+        l.i("SMSM:: Get ALL SMS RETURN SIZE: ${res.size} :: ${nt - t}ms")
         return res
     }
 
@@ -451,70 +443,100 @@ class SmsManager(
 //        l.i("SMS MANAGER: GET ALL SMS ***THREAD*** RETURN SIZE: ${nt - t} :: ${res.size}")
 //        return res
 //    }
-//    /**
-//     * GET ALL THREADS
-//     */
-//    private fun getAllSmsThreads(
-//        where: String?
-//    ): ArrayList<Sms.AppSmsShort>?
-//    {
-//        l.d("SMS MANAGER: Get ALL SMS THREADS: $where")
-//
-//        val res = ArrayList<Sms.AppSmsShort>()
-//        // This reads the base column table info for some reason
-//        val c = _context.contentResolver.query(
-//            THREADS_CONTENT_URI,  // content://mms-sms/conversations/
+    /**
+     * GET ALL THREADS
+     */
+    private fun getAllSmsThreads(
+        where: String?
+    ): ArrayList<Sms.AppSmsShort>?
+    {
+        val t = System.currentTimeMillis()
+        l.d("SMSM:: GET ALL SMS THREAD ********** ${t}ms")
+
+        val res = ArrayList<Sms.AppSmsShort>()
+        // This reads the base column table info for some reason
+        val c = _context.contentResolver.query(
+            THREADS_CONTENT_URI,  // content://mms-sms/conversations/
+            THREAD_COLUMN,
+//            "*",
+//            THREAD_COLUMN,
 //            null,
-//            where,
-//            null,
-////            null
+            where,
+
+            null,
+            null
 //            SORT_ORDER_DESC
-//        )
-//        if (c != null)
-//        {
-//            var hasData = c.moveToFirst()
-//            while (hasData)
-//            {
-//
-//                try {
-//                    val sms = Sms.AppSmsShort(
-//                        c.getInt(c.getColumnIndex("_id")),                  // _ID
-//                        c.getLong(c.getColumnIndex("thread_id")),           // thread_ID
-//                        c.getString(c.getColumnIndex("address")),           // address
-//                        c.getInt(c.getColumnIndex("person")),               // person
-//                        c.getLong(c.getColumnIndex("date")),                // date
-//                        c.getLong(c.getColumnIndex("date_sent")),           // date_sent
-//                        c.getInt(c.getColumnIndex("rr")),             // protocol
-//                        c.getInt(c.getColumnIndex("read")),                 // read
-//                        c.getInt(c.getColumnIndex("status")),               // status
-//                        c.getInt(c.getColumnIndex("type")),                 // type
-//                        c.getInt(c.getColumnIndex("reply_path_present")),   // reply_path_present
-//                        c.getString(c.getColumnIndex("subject")),           // subject
-//                        c.getString(c.getColumnIndex("body")),              // body
-//                        c.getString(c.getColumnIndex("service_center")),    // service_center
-//                        c.getInt(c.getColumnIndex("locked")),               // locked
-//                        c.getInt(c.getColumnIndex("sub_id")),               // sub_id
-//                        c.getInt(c.getColumnIndex("error_code")),           // error_code
-//                        c.getString(c.getColumnIndex("resp_txt")),           //  creator
-//                        c.getInt(c.getColumnIndex("read_status"))                  // seen
-//                    )
-////                    l.i("SMS MANAGER: Get ALL Thread Data: $sms")
-//
-//                    res.add(sms)
-//                }
-//                catch (e: Exception)
-//                {
-//                    l.e(
-//                        "SMS THREAD BUILD ERROR: " +
-//                                "$e " +
-//                                "${c.getInt(c.getColumnIndex("thread_id"))} " +
-//                                "${c.getString(c.getColumnIndex("subject"))}")
-//                }
-//                hasData = c.moveToNext()
-//            }
-//            l.e("SMS THREAD BUILD SIZE: ${res.size}")
-//            c.close()
-//        }
-//        return res
-//    }
+        )
+        if (c != null)
+        {
+            // Print columns for debugging each SDK
+//            columnDebug(c)
+
+            var hasData = c.moveToFirst()
+            while (hasData)
+            {
+
+                try {
+
+                    val sms = Sms.AppSmsShort()
+                    sms.id = c.getInt(c.getColumnIndex("_id"))
+                    sms.thread_id = c.getLong(c.getColumnIndex("thread_id"))
+                    sms.address = c.getString(c.getColumnIndex("address"))
+                    sms.person = c.getInt(c.getColumnIndex("person"))
+                    sms.date = c.getLong(c.getColumnIndex("date"))
+                    sms.date_sent = c.getLong(c.getColumnIndex("date_sent"))
+//                    sms.protocol = c.getInt(c.getColumnIndex("protocol"))
+                    sms.read = c.getInt(c.getColumnIndex("read"))
+                    sms.status = c.getInt(c.getColumnIndex("status"))
+                    sms.type = c.getInt(c.getColumnIndex("type"))
+                    sms.reply_path_present = c.getInt(c.getColumnIndex("reply_path_present"))
+                    sms.subject = c.getString(c.getColumnIndex("subject"))
+                    sms.body = c.getString(c.getColumnIndex("body"))
+                    sms.service_center = c.getString(c.getColumnIndex("service_center"))
+                    sms.locked = c.getInt(c.getColumnIndex("locked"))
+//                sms.sub_id = c.getInt(c.getColumnIndex("sub_id"))
+                    sms.error_code = c.getInt(c.getColumnIndex("error_code"))
+//                    c.getString(c.getColumnIndex("creator"))// Kit-Kat doesn't support
+//                    sms.seen = c.getInt(c.getColumnIndex("seen"))
+//                    l.i("SMS MANAGER: Get ALL Thread Data: $sms")
+
+                    res.add(sms)
+                }
+                catch (e: Exception)
+                {
+                    l.e(
+                        "SMSM:: THREAD BUILD ERROR: " +
+                                "$e " +
+                                "${c.getInt(c.getColumnIndex("thread_id"))} " +
+                                c.getString(c.getColumnIndex("subject")))
+                }
+                hasData = c.moveToNext()
+            }
+            val nt: Long = System.currentTimeMillis()
+            l.e("SMSM:: THREAD BUILD SIZE:  ${res.size} :: ${nt - t}ms")
+            c.close()
+        }
+        return res
+    }
+
+    /**
+     * COLUMN DEBUG
+     */
+    private fun columnDebug(
+        column: Cursor
+    )
+    {
+        for (i in 0 until column.columnCount)
+        {
+            l.d(
+                "SMSM:: COLUMNS DEBUGGER: ${column.getColumnName(i)} ${
+                    column.getColumnIndex(
+                        column.getColumnName(
+                            i
+                        )
+                    )
+                }"
+            )
+        }
+    }
 }

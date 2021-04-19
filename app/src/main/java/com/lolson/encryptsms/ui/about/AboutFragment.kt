@@ -45,8 +45,8 @@ class AboutFragment : Fragment()
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-
+    ): View?
+    {
         // Bindings
         _binding = FragmentAboutBinding.inflate(inflater, container, false)
         val rootView = binding.root
@@ -56,21 +56,23 @@ class AboutFragment : Fragment()
 
         // Console output
         aboutSharedViewModel.text.observe(viewLifecycleOwner, {
-            binding.scrollView.append("$it\n")
+            binding.scrollView.text = it
+            // Scroll to the bottom of the window as text come in
+            binding.editTextTextMultiLine.fullScroll(View.FOCUS_DOWN)
         })
 
         // Watches the status of the secret keys for the contacts
         aboutSharedViewModel.contactKeysGood.observe(viewLifecycleOwner, {
 
             l.d("AA ABOUT STATUS: ${it.first} ${it.second} ${it.third}")
-            binding.contactKeyTextViewStatus.text = if(it.first) "Good" else "Failed"
+            binding.contactKeyTextViewStatus.text = if(it.first) "Good" else "Loading"
             binding.contactKeyTextViewKeyedAmount.text = it.second
             binding.totalContactsTextViewAmount.text = it.third
         })
 
         // Watches the main DH app key status
         aboutSharedViewModel.dhKeyGood.observe(viewLifecycleOwner, {
-            binding.dhKeyTextViewStatus.text = if(it) "Good" else "Failed"
+            binding.dhKeyTextViewStatus.text = if(it) "Good" else "Loading"
         })
         return rootView
     }
@@ -88,12 +90,11 @@ class AboutFragment : Fragment()
 
         //Send email to me for comments or questions
         binding.buttonSecond.setOnClickListener {
-//            findNavController().navigate(R.id.action_SecondFragment_to_FirstFragment)
             val intent = Intent(Intent.ACTION_SEND).apply {
                 type = emailType
                 putExtra(Intent.EXTRA_EMAIL, arrayOf(emailAddress))
                 putExtra(Intent.EXTRA_SUBJECT, subjectMessage)
-                putExtra(Intent.EXTRA_TEXT, emailSignature)
+                putExtra(Intent.EXTRA_TEXT, binding.scrollView.text)
             }
 
             Log.i(ContentValues.TAG, sentEmailLog)
@@ -114,7 +115,6 @@ class AboutFragment : Fragment()
         _binding = null
     }
 
-    @Override
     override fun onCreateOptionsMenu(
         menu: Menu,
         inflater: MenuInflater

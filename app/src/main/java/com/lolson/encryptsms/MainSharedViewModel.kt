@@ -7,21 +7,20 @@ import androidx.lifecycle.*
 import com.lolson.encryptsms.contents.KeyContent
 import com.lolson.encryptsms.data.model.Phone
 import com.lolson.encryptsms.data.model.Sms
+import com.lolson.encryptsms.modelviewhelpers.CryptoHelper
+import com.lolson.encryptsms.modelviewhelpers.KeyHelper
+import com.lolson.encryptsms.modelviewhelpers.SmsHelper
 import com.lolson.encryptsms.repository.ContactsKeyRepository
-import com.lolson.encryptsms.repository.DhRepository
+import com.lolson.encryptsms.repository.EcRepository
 import com.lolson.encryptsms.repository.SmsRepository
 import com.lolson.encryptsms.utility.CryptoMagic
 import com.lolson.encryptsms.utility.LogMe
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.security.InvalidKeyException
 import java.security.KeyPair
-import java.security.PublicKey
-import java.util.*
 import javax.crypto.KeyAgreement
 import javax.crypto.spec.SecretKeySpec
 
@@ -32,8 +31,9 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
 {
     // Invite message
     private val mInviteMessage =
-            "Encrypt SMS: I'm using a Secure SMS app, join me! Here is my " +
-            "public key when you're ready!"
+            "EncryptSMS: I'm using a Secure SMS app, join me! Here is my " +
+                    "public key when you're ready!" +
+                    "\nhttps://github.com/qleseid/EncryptSMS/tree/main/docs/apk"
 
     // Logger
     private var l = LogMe()
@@ -69,6 +69,7 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
         get() = _encryptSwitch
 
     // Console output in About Fragment
+    private var _text: MutableLiveData<String> = MutableLiveData()
     val text: LiveData<String>
         get() = _text
 
@@ -77,11 +78,22 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
     val title: LiveData<String>
         get() = _title
 
+    // Alert Dialog selector
+    private var _alert: MutableLiveData<Pair<Int, String?>> = MutableLiveData(Pair(-1, null))
+    val alert: LiveData<Pair<Int, String?>> = _alert
+        .asFlow()
+        .catch { l.e("MVM:: ALERT FLOW ERROR") }
+        .asLiveData(Dispatchers.Default)
+//        get() = _alert
+
     // Contact keys
     private var _contactKeys: ArrayList<KeyContent.AppKey> = ArrayList()
 
     // Map for contact keys by thread_id
-    private lateinit var _contactKeysMap: Map<String, SecretKeySpec>
+    private var _contactKeysMap: MutableMap<Long, KeyContent.AppKey> = mutableMapOf()
+
+    // Map for contact keys secret by thread_id
+    private var _contactKeysSecMap: MutableMap<Long, SecretKeySpec?> = mutableMapOf()
 
     // SMS container for individual conversations
     var tempSms: Sms.AppSmsShort? = null
@@ -89,24 +101,49 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
     lateinit var draftSms: Sms.AppSmsShort
 
     // Application key agreement
-    private val keyAgree = KeyAgreement.getInstance("DH")
+    private val keyAgree = KeyAgreement.getInstance("ECDH")
 
     // Application DH key
-    private var dhKey: KeyPair? = null
+    private var ecKey: KeyPair? = null
+
+    // Holder variable for all console output
+    private var consoleHolder = "MOO COW:\n"
 
     // Repositories
     private val contactKeyRep = ContactsKeyRepository(context)
     private val smsRep = SmsRepository(context)
-    private val dhRep = DhRepository(context)
+    private val ecRep = EcRepository(context)
 
     init
     {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(Dispatchers.Default) {
 
+//            l.d("MVM:: KEY PROVIDERS: ${Security.getProviders().asList()}")
+//            Security.getProviders().forEach {
+//
+//                l.d("MVM:: KEY PROVIDER: ${it.info} Services: ${it.services}")
+//            }
+//            l.d("MVM:: KEY ALGORITHM: ${Security.getAlgorithms("keyagreement").toList()}")
+//            l.d("MVM:: KEY ALGORITHM: ${Security.getAlgorithms("keypairgenerator").toList()}")
+//
+//            l.d("MVM:: GET PROVIDER: ${KeyPairGenerator.getInstance("EC", "BC")
+//                .provider}")
             // Get DH Keys
             getDhKeys()
 
-//            // Get all the contacts keys
+            // Flow the console data as it comes
+            conFlow
+                .catch { e ->
+                    l.e("MVM:: INIT FLOW ERROR: console flow $e")
+                }
+                .collect {
+                    // Reset after 21k characters, some devices have crazy output
+                    if (consoleHolder.length > 21000){consoleHolder = ""}
+
+                    // Hopefully append the strings value properly
+                    consoleHolder += "\n" + it
+                    _text.postValue(consoleHolder)
+                }
 //            getContactsKeys()
         }
     }
@@ -119,61 +156,122 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
     )
     {
 
-            l.d("MVM ENCRYPTED TOGGLE: $bool ${_encryptSwitch.value}")
+        l.d("MVM:: ENCRYPTED TOGGLE: $bool ${_encryptSwitch.value}")
 
-            // Each Fragment resets this toggle, this stop unnecessary runs
-            if (_encryptSwitch.value != bool)
-            {
-                _encryptSwitch.value = bool
-                //Create a new coroutine to move execution off of UI thread
-                viewModelScope.launch(Dispatchers.IO) {
+        // Each Fragment resets this toggle, this stop unnecessary runs
+        if (_encryptSwitch.value != bool && _contactKeysGood.value!!.first)
+        {
+            _encryptSwitch.value = bool
+            //Create a new coroutine to move execution off of UI thread
+            viewModelScope.launch(Dispatchers.Default) {
 
                 if (tempSms != null)
                 {
-                    l.d("MVM ENCRYPTED TOGGLE REFRESH BOTH: $bool ${_encryptSwitch.value}")
+                    l.d("MVM:: ENCRYPTED TOGGLE REFRESH BOTH: $bool ${_encryptSwitch.value}")
 
                     // Refreshes the recycler view in real-time
-                    _threads.postValue(deLoop(sqlThreads))
-                    _messages.postValue(deLoop(sqlMessages))
+                    _threads.postValue(
+                        if (encSwitch.value!!)
+                        {
+                            CryptoHelper().deLoop(sqlThreads, _contactKeysSecMap)
+                        }
+                        else
+                        {
+                            sqlThreads
+                        })
+                    _messages.postValue(
+                        if (encSwitch.value!!)
+                        {
+                            CryptoHelper().deLoop(sqlMessages, _contactKeysSecMap)
+                        }
+                        else
+                        {
+                            sqlMessages
+                        })
                 }
                 else
                 {
-                    l.d("MVM ENCRYPTED TOGGLE REFRESH THREAD ONLY: $bool ${_encryptSwitch.value}")
-                    _threads.postValue(deLoop(sqlThreads))
+                    l.d("MVM:: ENCRYPTED TOGGLE REFRESH THREAD ONLY: $bool ${_encryptSwitch.value}")
+                    _threads.postValue(
+                        if (encSwitch.value!!)
+                        {
+                            CryptoHelper().deLoop(sqlThreads, _contactKeysSecMap)
+                        }
+                        else
+                        {
+                            sqlThreads
+                        })
                 }
+                // Check for invite and alert when encrypt set to true
+//                tempSms?.let { alertHelper(0, null)}
             }
         }
     }
 
     /**
      * CHECK FOR ENCRYPTION KEY
+     * TODO:: Key can be null, create check
+     * Uses:
+     * 1- Check for a key
      */
-    fun checkForEncryptionKey(
+    private fun checkForEncryptionKey(
         thread_id: Long
     ):Boolean
     {
-        return _contactKeysMap.containsKey(thread_id.toString())
+        return KeyHelper().checkForEncryptionKey(thread_id, _contactKeysSecMap)
     }
 
     /**
      * CHECK IF INVITE WAS SENT
+     *
+     * Uses:
+     * 1- Check if an invite has been sent
      */
     private fun checkInviteSent(
         thread_id: Long
     ):Boolean
     {
-        l.d("MVM CHECK INVITE SENT START: $thread_id")
-        var result = false
+        return KeyHelper().checkInviteSent(thread_id, _contactKeys)
+    }
 
-        for (k in _contactKeys)
-        {
-            if (k.thread_id.toLong() == thread_id)
+    /**
+     * ALERT HELPER
+     * Helps check for invite sent and key discovery
+     */
+    fun alertHelper(
+        select: Int,
+        msg: String?
+    )
+    {
+        viewModelScope.launch(Dispatchers.Default) {
+            l.d("MVM:: ALERT HELPER SELECTION: $select")
+
+            when (select)
             {
-                l.d("MVM CHECK INVITE SENT: ${k.sent}")
-                result = k.sent
+                0    ->
+                {
+                    // Check invite and alert when encrypt set to true
+//                    TODO:: Fix this before sending it
+//                    if (_encryptSwitch.value!! && tempSms!!.thread_id != -1L)
+                    if (tempSms!!.thread_id != -1L)
+                    {
+//                        if (!checkInviteSent(tempSms!!.thread_id))
+//                        {
+                            _alert.postValue(Pair(select, msg))
+//                        }
+                    }
+                }
+                1    ->
+                {
+                    l.d("MVM:: ALERT HELPER SELECTION 1: $select")
+                }
+                else ->
+                {
+                    _alert.postValue(Pair(select, msg))
+                    l.d("MVM:: ALERT HELPER SELECTION ELSE: $select")
+                }
             }
         }
-        return result
     }
 
     /**
@@ -183,7 +281,7 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
         select: Int
     )
     {
-        l.d("MVM REFRESH: $select")
+        l.d("MVM:: REFRESH: $select")
         when(select)
         {
             0 -> getAllThreads() // 0 = refresh the threads
@@ -200,30 +298,21 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
     {
         val data = ArrayList<Sms.AppSmsShort>()
 
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(Dispatchers.Default) {
             // Creates shallow copy of objects
             _messages.value?.map { data.add(it.copy()) }
 
-            if (tempSms == null)
-            {
-                tempSms = Sms.AppSmsShort()
-            }
 
-            // Build the message
-            tempSms!!.read = 1
-            tempSms!!.status = 0
-            tempSms!!.type = 2
-            tempSms!!.date = System.currentTimeMillis()
-            tempSms!!.date_sent = tempSms!!.date
-            tempSms!!.creator = "com.example.encryptsms"
-            tempSms!!.body = msg
+            if (tempSms == null){ tempSms = Sms.AppSmsShort() }
+            SmsHelper().buildSmsMessage(msg, tempSms!!)
 
             // Encrypt message if switch is set
+            // TODO:: Fix sending an invite encrypted
             if (encSwitch.value!! && checkForEncryptionKey(tempSms!!.thread_id))
             {
                 tempSms!!.body = CryptoMagic.encrypt(
                     tempSms!!,
-                    _contactKeysMap[tempSms!!.thread_id.toString()]
+                    _contactKeysSecMap[tempSms!!.thread_id]
                 )
             }
 
@@ -232,20 +321,12 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
 
             if (smsRep.send(draftSms))
             {
-                l.d("MVM SHARE SEND SMS SUCCESS!")
+                l.d("MVM:: SEND SMS SUCCESS!")
+                // Update the local thread
+                sqlThreads = SmsHelper().updateThread(draftSms, sqlThreads)
 
-                // Don't add the keys to message conversation
-                if (msg.startsWith("$"+"CILBUP"))
-                {
-                    // Add to end of list
-                    draftSms.body = "Public Key Sent"
-                    l.d("MVM PUBLIC KEY: $msg")
-                }
-                else
-                {
-                    // Add correct msg
-                    draftSms.body = msg
-                }
+                // Add correct msg
+                draftSms.body = msg
                 // Add to end of list
                 data.add(data.lastIndex + 1, draftSms)
 
@@ -264,28 +345,43 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
     {
         viewModelScope.launch(Dispatchers.Default) {
             // Need a key to sent and not sent an invite yet
-            if (dhKeyGood.value!! && !checkInviteSent(tempSms!!.thread_id))
+
+            // TODO:: set that an invite has been sent
+            if (dhKeyGood.value!!)
             {
-                l.d("MVM SEND INVITE: ${tempSms!!.thread_id}")
-                // Send the invite header message
-                sendSmsMessage(mInviteMessage)
+                l.d("MVM:: SEND INVITE: ${tempSms!!.thread_id}")
 
-                // Send you're public key
-                val en = Base64.encodeToString(dhKey?.public?.encoded, DEFAULT)
-                sendSmsMessage("$" + "CILBUP" + en + "DNE$")
+                try
+                {
+                    val contact = _contactKeysMap.getValue(
+                        tempSms!!.thread_id
+                    )
+                    // Update the key map value
+                    // This updates _contactKeys as well
+                    contact.sent = true
+                    if (updateContactsKey(contact))
+                    {
+                        // Send the invite header message
+                        sendSmsMessage(mInviteMessage)
 
-//                // Debug truth
-//                try
-//                {
-//
-//                    l.d("MVM SEND INVITE ENCODE: $en")
-//
-//                    val de = KeyFactory.getInstance("DH").generatePublic(
-//                        X509EncodedKeySpec(Base64.decode(en, DEFAULT)))
-//                    val truth = de == dhKey?.public
-//
-//                    l.d("MVM SEND INVITE DECODE: $de :: $truth")
-//                }catch (e: Exception){}
+                        // Send you're public key
+                        val en = Base64.encodeToString(ecKey?.public?.encoded, DEFAULT)
+                        sendSmsMessage("$" + "CILBUP" + en + "DNE$")
+
+                        l.d("MVM:: SEND INVITE PUBLIC KEY SIZE: ${en.length}")
+
+                        l.d(
+                            "MVM:: SEND INVITE map: " +
+                                    "${_contactKeysMap[tempSms!!.thread_id]?.sent}")
+                        l.d(
+                            "MVM:: SEND INVITE secmap: " +
+                                    "${_contactKeys[_contactKeys.indexOf(contact)].sent}")
+                    }
+                }
+                catch (e: Exception)
+                {
+                    l.e("MVM:: SEND INVITE ERROR: $e")
+                }
             }
         }
     }
@@ -316,10 +412,50 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
             sqlMessages.clear()
             data.map { sqlMessages.add(it.copy()) }
 
+            // TODO:: The last has been changed for testing, should be 'it'
+            val msg = _contactKeysMap[data[0].thread_id]?.last_check?.let {
+                KeyHelper().keyMessageFinder(
+                    data,
+                    1L)
+            }
+
+            val contact: KeyContent.AppKey
+            if (msg?.id != -1)
+            {
+                msg?.let { smsShort ->
+                    contact = KeyHelper().buildContactKey(
+                        KeyHelper().trimMessageAndGenerateKey(smsShort),
+                        smsShort,
+                        _contactKeysMap
+                    )
+
+                    if(updateContactsKey(contact))
+                    {
+                        _contactKeysSecMap[contact.thread_id] =
+                                contact.publicKey?.let { CryptoHelper().generateSecret(it,
+                                    keyAgree) }
+                    }
+                    else
+                    {
+                        l.e("MVM:: UPDATE OF CONTACT KEY FAILED")
+                    }
+                }
+            }
+
             // Decrypt the messages and post to live data
-            _messages.postValue(deLoop(data))
+            _messages.postValue(
+                if (encSwitch.value!!){ CryptoHelper().deLoop(data, _contactKeysSecMap)}
+                else{ data })
 //            _messages.postValue(data)
         }
+    }
+
+    /**
+     * CLEAN UP THE MESSAGES
+     */
+    fun cleanUpMessages()
+    {
+        _messages.value?.clear()
     }
 
     /**
@@ -329,27 +465,44 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
     {
         val data = ArrayList<Sms.AppSmsShort>()
 
-        //Create a new coroutine to move execution off of UI thread
+        // Create a new coroutine to move execution off of UI thread
         viewModelScope.launch(Dispatchers.IO) {
 
-            smsRep.getAllThreads().let {
-                if (it != null)
-                {
-                    data.addAll(it)
-                }
-            }
+            smsRep.getAllThreads()?.let { data.addAll(it) }
 
             // shallow copy and local storage of threads
             sqlThreads.clear()
             data.map { sqlThreads.add(it.copy()) }
 
+            viewModelScope.launch(Dispatchers.Default) {
+                var loop = true
+                while (loop)
+                {
+//                    l.d("MVM:: GET ALL THREADS WHILE: $loop")
+                    if (_contactKeysGood.value!!.first)
+                    {
+                        if (_contactKeysGood.value!!.second.toInt() != data.size)
+                        {
+                            l.d(
+                                "MVM:: GET ALL THREADS GEN CONTACTS: " +
+                                        "${_contactKeysGood.value!!} " +
+                                        data.size)
+                            genContacts(data)
+                        }
+                        loop = false
+                    }
+                    delay(200)
+                }
+            }
             // Decrypt the messages and post to live data
-            _threads.postValue(deLoop(data))
-
-            // Rough estimate of total contacts with messages
-//            l.d("MVM THREAD STATUS: ${_contactKeysGood.value!!.first} " +
-//                    "${_contactKeysGood.value!!.second} " +
-//                    " ${data.size}")
+            if (encSwitch.value!! && _contactKeysGood.value!!.first)
+            {
+                _threads.postValue(CryptoHelper().deLoop(data, _contactKeysSecMap))
+            }
+            else
+            {
+                _threads.postValue(data)
+            }
 
             // Some hardware handles IO operations different; data is missed outside of Main
             viewModelScope.launch(Dispatchers.Main) {
@@ -359,7 +512,6 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
                     data.size.toString()
                 )
             }
-//            genContacts(data)
         }
     }
 
@@ -376,33 +528,7 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
         }
     }
 
-    /**
-     * MESSAGE DECRYPT LOOP
-     */
-    private fun deLoop(
-        data: ArrayList<Sms.AppSmsShort>
-    ):ArrayList<Sms.AppSmsShort>
-    {
-        val result = ArrayList<Sms.AppSmsShort>()
-            data.map { result.add(it.copy()) }
-
-            l.d("MVM DECRYPTING START: ${encSwitch.value!!}")
-            // con = count, d = individual data
-            for ((con, d) in data.withIndex())
-            {
-                if (encSwitch.value!!)
-                {
-                    result[con].body = CryptoMagic.decrypt(
-                        d,
-                        _contactKeysMap[d.thread_id.toString()]
-                    )
-                }
-//                l.d("DECRYPTING END: ${data[con].body}")
-            }
-        return result
-    }
-
-        /**
+     /**
      * SET MAIN ACTIVITY TITLE
      */
     fun setTitle(
@@ -413,24 +539,24 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
     }
 
     /**
-     * GET DH KEY
+     * GET EC KEY
      */
     private suspend fun getDhKeys()
     {
-        dhKey = dhRep.getKey()
+        ecKey = ecRep.getKey()
 //        dhKey = CryptoMagic.generateDHKeys()
 //        saveDhKeys(dhKey!!)
 
-        if (dhKey == null)
+        if (ecKey == null)
         {
-            l.d("MVM $$\\NO DH KEYS YET$$")
-            dhKey = CryptoMagic.generateDHKeys()
-            saveDhKeys(dhKey!!)
+            l.d("MVM:: $$\\NO EC KEYS YET$$")
+            ecKey = CryptoMagic.generateDHKeys()
+            saveDhKeys(ecKey!!)
         }
         // Init key agreement
         try
         {
-            keyAgree.init(dhKey!!.private)
+            keyAgree.init(ecKey!!.private)
 
             // Once the DH key is returned and init, build secrets
             getContactsKeys()
@@ -439,13 +565,8 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
         }
         catch (e: InvalidKeyException)
         {
-            l.e("MVM Error creating private key agreement: $e")
+            l.e("MVM:: Error creating private key agreement: $e")
         }
-
-//        l.d("PUB GEN: ${Base64.encodeToString(dhKey!!.public.encoded, DEFAULT)}")
-//        l.d("PVT GEN: ${Base64.encodeToString(dhKey!!.private.encoded, DEFAULT)}")
-//        l.d("PUB ENCODE: ${dhKey!!.public.encoded.contentEquals(dhKey!!.private.encoded)}")
-
     }
 
     /**
@@ -455,24 +576,7 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
         key: KeyPair
     )
     {
-        if (!dhRep.saveKey(key)){l.e("MVM ERROR: Failed to save DH KEY")}
-    }
-
-    /**
-     * GENERATE SECRET FOR CONTACT
-     */
-    private fun generateSecret(
-        key: PublicKey
-    ):SecretKeySpec
-    {
-        l.d("MVM ^^^^^^^GENERATING SECRET^^^^^^")
-        keyAgree.doPhase(key, true)
-        return SecretKeySpec(
-            keyAgree.generateSecret(),
-            0,
-            32,
-            "AES"
-        )
+        if (!ecRep.saveKey(key)){l.e("MVM:: ERROR: Failed to save DH KEY")}
     }
 
     /**
@@ -485,7 +589,9 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
 
         mapContactKeys()
 
-        l.d("MVM GETTING CON KEYS, total: ${_contactKeys.size}")
+//        genContacts(sqlThreads)
+
+        l.d("MVM:: GETTING CON KEYS, total: ${_contactKeys.size}")
     }
 
     /**
@@ -493,31 +599,40 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
      */
     private fun mapContactKeys()
     {
-        // Map ArrayList by thread_id to its secret key
-        _contactKeysMap = _contactKeys.associate {
-            it.thread_id to generateSecret(it.publicKey)
+        // TODO:: This might be broken with the whole null key thing
+        // Map the key ArrayList by thread_id to its secret key
+        _contactKeys.forEach {
+            _contactKeysSecMap[it.thread_id] = it.publicKey?.let { it1 ->
+                CryptoHelper().generateSecret(it1, keyAgree) }
+            _contactKeysMap[it.thread_id] = it
         }
-//        l.d("MVM CONTACTS STATUS: ${_contactKeysGood.value!!.first} " +
-//                "${_contactKeysGood.value!!.second} " +
-//                " ${_contactKeysGood.value!!.third}")
+
+//        _contactKeysSecMap = _contactKeys.associate {
+//            it.thread_id to it.publicKey?.let { it1 ->
+//                KeyHelper().generateSecret(it1, keyAgree) }
+//        }
+        // Map the key ArrayList by thread_id
+//        _contactKeysMap = _contactKeys.associateBy { it.thread_id }
 
         // Some hardware handles IO operations different; data is missed outside of Main
         viewModelScope.launch(Dispatchers.Main) {
             _contactKeysGood.value = Triple(
                 true,
-                _contactKeysMap.size.toString(),
+                _contactKeysSecMap.size.toString(),
                 _contactKeysGood.value!!.third
             )
         }
-        l.d("MVM MAPPING CON KEYS, total: ${_contactKeysMap.size}")
+        l.d("MVM:: MAPPING CON KEYS, total: ${_contactKeysSecMap.size}")
     }
 
     /**
      * UPDATE CONTACTS KEY
      */
-    private fun updateContactsKey()
+    private suspend fun updateContactsKey(
+        contact: KeyContent.AppKey
+    ):Boolean
     {
-
+        return contactKeyRep.update(contact)
     }
 
     /**
@@ -540,46 +655,89 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
 
     /**
      * ABOUT CONSOLE OUTPUT FLOW
+     * TODO:: Filters could be revamped for a more generic scope
      */
     @Suppress("BlockingMethodInNonBlockingContext")
     private val conFlow: Flow<String> = flow {
-        l.d("Flow runup")
+        l.d("Flow Run-up")
         Runtime.getRuntime().exec("logcat -c")
         Runtime.getRuntime().exec("logcat")
             .inputStream
             .bufferedReader()
-            .useLines { lines -> lines.forEach { line -> emit(line) } }
+            .useLines { lines ->
+                lines.forEach { line ->
+                    emit(line.replaceBefore(":::", "", line))
+                }
+            }
     }
+        .filterNot {
+            it.startsWith("D/d", false) // KitKat memory cleanup
+        }
+        .filterNot {
+            it.startsWith("D/V", false) // LollyPop screen touches
+        }
+        .filterNot {
+            it.startsWith("I/V", false) // KitKat screen touches
+        }
+        .filterNot {
+            it.startsWith("W/T", false) // KitKat screen touches
+        }
+        .filterNot {
+            it.contains("ViewPost", false) // Samsung sucking screen stuff
+        }
         .onStart {
-            l.d("Flow started")
             emit("FLOW START") }
         .flowOn(Dispatchers.Default)
 
-    private var _text = conFlow.asLiveData(viewModelScope.coroutineContext + Dispatchers.Default)
+//    private var _text = conFlow.collect()
+//    private var _text = conFlow.asLiveData(viewModelScope.coroutineContext + Dispatchers.Default)
 //    private var _text = consStream()
 
-//    private suspend fun genContacts(
-//        data: ArrayList<Sms.AppSmsShort>
-//    )
-//    {
-//        for(d in data)
-//        {
-//            val key = KeyContent.AppKey(
-//                "",                                    // key primary id
-//                d.thread_id.toString(),                // thread id
-//                CryptoMagic.generateDHKeys().public    // public key
-//            )
-//
-//            if (createContactsKey(key))
-//            {
-//                l.d("CREATE CONTACT KEYS: ${key.id} ${d.thread_id}")
-//                _contactKeys.add(key)
-//                mapContactKeys()
-//            }
-//            else
-//            {
-//                l.d("ERROR CREATING CONTACT KEY: ${d.address}")
-//            }
-//        }
-//    }
+    private suspend fun genContacts(
+        data: ArrayList<Sms.AppSmsShort>
+    )
+    {
+        // No key storage created yet for contacts
+        if (_contactKeys.size == 0)
+        {
+            for (d in data)
+            {
+                val key = KeyContent.AppKey()
+                key.thread_id = d.thread_id          // thread id
+
+
+                if (createContactsKey(key))
+                {
+                    l.d("MVM:: CREATE ALL NEW CONTACT KEYS: ${key.id} ${d.thread_id}")
+                    _contactKeys.add(key)
+                }
+                else
+                {
+                    l.d("MVM:: ERROR CREATING ALL NEW CONTACT KEY: ${d.address}")
+                }
+            }
+        }
+        else // Find and add missing key storage
+        {
+            for (d in data)
+            {
+                if (!_contactKeysMap.containsKey(d.thread_id))
+                {
+                    val key = KeyContent.AppKey()
+                    key.thread_id = d.thread_id          // thread id
+
+                    if (createContactsKey(key))
+                    {
+                        l.d("MVM:: CREATE MISSING CONTACT KEYS: ${key.id} ${d.thread_id}")
+                        _contactKeys.add(key)
+                    }
+                    else
+                    {
+                        l.d("MVM:: ERROR CREATING MISSING CONTACT KEY: ${d.address}")
+                    }
+                }
+            }
+        }
+        mapContactKeys()
+    }
 }

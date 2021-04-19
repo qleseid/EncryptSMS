@@ -32,6 +32,7 @@
         android:layout_marginEnd="16dp"
         android:autofillHints=""
         android:background="#FAFAFA"
+        android:isScrollContainer="true"
         app:layout_constraintBottom_toTopOf="@+id/button_second"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
@@ -42,7 +43,6 @@
             android:id="@+id/scroll_view"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:isScrollContainer="false"
             tools:text="@tools:sample/lorem/random" />
 
     </ScrollView>

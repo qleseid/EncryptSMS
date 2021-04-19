@@ -12,11 +12,14 @@ import androidx.test.filters.LargeTest
 import androidx.test.rule.ActivityTestRule
 import androidx.test.rule.GrantPermissionRule
 import androidx.test.runner.AndroidJUnit4
+import com.microsoft.appcenter.espresso.Factory
+import com.microsoft.appcenter.espresso.ReportHelper
 import org.hamcrest.Description
 import org.hamcrest.Matcher
 import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.TypeSafeMatcher
+import org.junit.After
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -25,6 +28,9 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class FabActivityTest
 {
+    @Rule
+    @JvmField
+    var reportHelper: ReportHelper = Factory.getReportHelper()
 
     @Rule
     @JvmField
@@ -37,9 +43,14 @@ class FabActivityTest
                 "android.permission.SEND_SMS",
                 "android.permission.READ_CONTACTS",
                 "android.permission.READ_SMS")
+    @After
+    fun tearDown()
+    {
+        reportHelper.label("Stopping App")
+    }
 
     @Test
-    fun fabActivityTest()
+    fun fabActivityTest2()
     {
         // Splash screen has a delay which must finish before anything else
         // Without it, resources aren't loaded properly
@@ -58,6 +69,16 @@ class FabActivityTest
                 isDisplayed()))
         floatingActionButton.perform(click())
 
+//        val appCompatButton = onView(
+//            allOf(
+//                withId(android.R.id.button2), withText("Cancel"),
+//                childAtPosition(
+//                    childAtPosition(
+//                        withId(R.id.buttonPanel),
+//                        0),
+//                    2)))
+//        appCompatButton.perform(scrollTo(), click())
+
         val toolbar = onView(
             allOf(
                 withId(R.id.toolbar),
@@ -69,7 +90,17 @@ class FabActivityTest
                 isDisplayed()))
         toolbar.perform(click())
 
-        val appCompatButton = onView(
+//        val editText = onView(
+//            allOf(
+//                childAtPosition(
+//                    childAtPosition(
+//                        withClassName(`is`("com.google.android.material.textfield.TextInputLayout")),
+//                        0),
+//                    0),
+//                isDisplayed()))
+//        editText.perform(click())
+
+        val appCompatButton2 = onView(
             allOf(
                 withId(android.R.id.button2), withText("Cancel"),
                 childAtPosition(
@@ -77,55 +108,7 @@ class FabActivityTest
                         withId(R.id.buttonPanel),
                         0),
                     2)))
-        appCompatButton.perform(scrollTo(), click())
-
-        val overflowMenuButton = onView(
-            allOf(
-                withContentDescription("More options"),
-                childAtPosition(
-                    childAtPosition(
-                        withId(R.id.toolbar),
-                        1),
-                    1),
-                isDisplayed()))
-        overflowMenuButton.perform(click())
-
-        val appCompatTextView = onView(
-            allOf(
-                withId(R.id.title), withText("Settings"),
-                childAtPosition(
-                    childAtPosition(
-                        withId(R.id.content),
-                        0),
-                    0),
-                isDisplayed()))
-        appCompatTextView.perform(click())
-
-        val navigationMenuItemView = onView(
-            allOf(
-                withId(R.id.nav_vis),
-                childAtPosition(
-                    allOf(
-                        withId(R.id.design_navigation_view),
-                        childAtPosition(
-                            withId(R.id.nav_view),
-                            0)),
-                    2),
-                isDisplayed()))
-        navigationMenuItemView.perform(click())
-
-        val switchCompat = onView(
-            allOf(
-                withId(R.id.vis_switch_compat),
-                childAtPosition(
-                    allOf(
-                        withId(R.id.vis_switch_rela_lay),
-                        childAtPosition(
-                            withId(R.id.design_menu_item_action_area),
-                            0)),
-                    0),
-                isDisplayed()))
-        switchCompat.perform(click())
+        appCompatButton2.perform(scrollTo(), click())
 
         val appCompatImageButton = onView(
             allOf(

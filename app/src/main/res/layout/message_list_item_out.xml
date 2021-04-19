@@ -15,37 +15,34 @@
         android:layout_height="wrap_content"
         android:gravity="center"
         android:padding="8dp"
-        android:textSize="8sp"
-        app:layout_constraintEnd_toStartOf="@id/sim"
+        android:textSize="12sp"
+        app:layout_constraintEnd_toStartOf="@+id/sim"
         app:layout_constraintHorizontal_chainStyle="packed"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:text="01/24/21 13:34"
-        tools:ignore="SmallSp" />
+        tools:ignore="SmallSp"
+        tools:text="01/24/21 13:34" />
 
     <ImageView
         android:id="@+id/sim"
         android:layout_width="16dp"
         android:layout_height="16dp"
-        android:layout_marginEnd="2dp"
+        android:contentDescription="@string/message_out_sim"
         android:src="@drawable/ic_sim_card_black_24dp"
-        app:layout_constraintBottom_toBottomOf="@id/timestamp"
-        app:layout_constraintEnd_toStartOf="@id/simIndex"
-        app:layout_constraintStart_toEndOf="@id/timestamp"
-        app:layout_constraintTop_toTopOf="@id/timestamp"
-        app:tint="?android:attr/textColorSecondary"
-        android:contentDescription="@string/message_out_sim" />
+        app:layout_constraintBottom_toBottomOf="@+id/timestamp"
+        app:layout_constraintEnd_toStartOf="@+id/simIndex"
+        app:layout_constraintTop_toTopOf="@+id/timestamp"
+        app:tint="?android:attr/textColorSecondary" />
 
     <TextView
         android:id="@+id/simIndex"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginEnd="12dp"
         android:textColor="?android:attr/textColorSecondary"
         android:textSize="12sp"
-        app:layout_constraintBottom_toBottomOf="@id/timestamp"
+        app:layout_constraintBottom_toBottomOf="@+id/sim"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/sim"
-        app:layout_constraintTop_toTopOf="@id/timestamp"
+        app:layout_constraintTop_toTopOf="@+id/sim"
         tools:text="1" />
 
     <androidx.recyclerview.widget.RecyclerView
@@ -76,6 +73,7 @@
         android:background="@drawable/message_only_out"
         android:gravity="start|center_vertical"
         android:minHeight="36dp"
+        android:textColorLink="#B71C1C"
         app:layout_constrainedWidth="true"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="1"
@@ -123,7 +121,7 @@
         android:layout_marginEnd="24dp"
         android:layout_marginBottom="4dp"
         android:textColor="?android:attr/textColorSecondary"
-        android:textSize="8sp"
+        android:textSize="12sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/body"

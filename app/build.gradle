@@ -10,8 +10,8 @@ android {
         applicationId "com.lolson.encryptsms"
         minSdkVersion 19
         targetSdkVersion 30
-        versionCode 1
-        versionName "1.6.3"
+        versionCode 3
+        versionName "2.1"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -23,9 +23,25 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            debuggable false
+            debuggable true
+        }
+        devel {
+            debuggable true
+            jniDebuggable true
+            renderscriptDebuggable true
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt')
+        }
+    }
+
+    signingConfigs {
+        release {
+            storeFile file(RELEASE_STORE_FILE)
+            storePassword System.getenv("KEYSTORE_PASSWORD")
+            keyAlias System.getenv("KEYSTORE_ALIAS")
+            keyPassword System.getenv("KEY_PASSWORD")
         }
     }
     
@@ -85,6 +101,6 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
     androidTestImplementation 'androidx.test:rules:1.3.0'
     androidTestImplementation 'androidx.test.espresso:espresso-contrib:3.3.0'
-//    implementation 'pl.droidsonroids.gif:android-gif-drawable:1.2.23'
+    androidTestImplementation('com.microsoft.appcenter:espresso-test-extension:1.4')
     testImplementation 'androidx.test:core:1.3.0'
 }
