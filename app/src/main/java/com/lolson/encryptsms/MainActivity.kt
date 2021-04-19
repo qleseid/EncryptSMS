@@ -2,22 +2,14 @@ package com.lolson.encryptsms
 
 import android.Manifest
 import android.content.pm.PackageManager
-import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.telephony.PhoneNumberUtils
-import android.text.Editable
-import android.text.TextWatcher
-import android.view.Gravity
 import android.view.Menu
 import android.view.MenuItem
-import android.view.WindowManager
-import android.widget.EditText
 import android.widget.RelativeLayout
 import android.widget.Toast
 import androidx.activity.viewModels
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SwitchCompat
 import androidx.core.app.ActivityCompat
@@ -30,11 +22,9 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import com.google.android.material.navigation.NavigationView
-import com.google.android.material.textfield.TextInputLayout
 import com.lolson.encryptsms.data.livedata.ReceiveNewSms
-import com.lolson.encryptsms.data.model.Phone
-import com.lolson.encryptsms.data.model.Sms
 import com.lolson.encryptsms.databinding.ActivityMainBinding
+import com.lolson.encryptsms.utility.AlertDialogs
 import com.lolson.encryptsms.utility.LogMe
 
 /**
@@ -53,7 +43,6 @@ open class MainActivity : AppCompatActivity()
     private lateinit var visSwitch: SwitchCompat
 
     //Intent extra strings
-    private val dialogError: String = "Invalid Number"
     private val appBarSetting: String = "Settings clicked"
 
     //Logger
@@ -70,6 +59,7 @@ open class MainActivity : AppCompatActivity()
     )
     {
         super.onCreate(savedInstanceState)
+        l.d("MA:: ON CREATE")
 
         //Inflate all views and bind to variable
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -101,7 +91,7 @@ open class MainActivity : AppCompatActivity()
         // Observe data changes from Broadcast Receiver
         ReceiveNewSms.get().observe(this, {
 
-            l.d("MAIN ACTIVITY SMS RECEIVER OBSERVER: $it")
+            l.d("MA: SMS RECEIVER OBSERVER: $it")
             if (it)
             {
                 sharedViewModel.refresh(0)
@@ -109,20 +99,33 @@ open class MainActivity : AppCompatActivity()
             }
         })
 
+        // Handle alert dialog launches from all over the fragments within this activity
+        sharedViewModel.alert.observe(this, {
+            l.d("MA:: ALERT OBSERVER $it")
+            AlertDialogs(this, sharedViewModel).alertLauncher(it.first, it.second)
+        })
+
         // Drawer toolbar visibility toggle listener
         visSwitch = binding.navView.menu[1]
             .actionView.findViewById(R.id.vis_switch_compat) as SwitchCompat
 
-        visSwitch.setOnCheckedChangeListener { _, isChecked ->
-
-            if (isChecked)  supportActionBar?.show() else supportActionBar?.hide()
-        }
-
         // Hide app bar during startup
-        visSwitch.isChecked = false
+        supportActionBar?.hide()
 
         // Check Permissions
         checkSmsPermission()
+    }
+
+    override fun onPause()
+    {
+        super.onPause()
+        l.d("MA:: ON PAUSE")
+    }
+
+    override fun onDestroy()
+    {
+        super.onDestroy()
+        l.d("MA:: ON DESTROY")
     }
 
     /**
@@ -155,12 +158,16 @@ open class MainActivity : AppCompatActivity()
         return true
     }
 
-    override fun onSupportNavigateUp(): Boolean
+    override fun onSupportNavigateUp()
+            : Boolean
     {
+//        navController.navigate(R.id.nav_threads)
         return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
     }
 
-    // Handle conversation selection in appbar
+    /**
+     * ACTION BAR ITEM LOGIC
+     */
     override fun onOptionsItemSelected(
         item: MenuItem
     ): Boolean
@@ -172,10 +179,17 @@ open class MainActivity : AppCompatActivity()
             //Handles the home menu click event
             R.id.action_settings ->
             {
-                Toast.makeText(applicationContext, appBarSetting, Toast.LENGTH_LONG).show()
+                sharedViewModel.alertHelper(3, appBarSetting)
+//                Toast.makeText(applicationContext, appBarSetting, Toast.LENGTH_LONG).show()
 
                 //Nav drawer is the settings page
                 binding.drawerLayout.open()
+                true
+            }
+            R.id.action_invite ->
+            {
+                // TODO:: have this check invites first
+                sharedViewModel.alertHelper(0, null)
                 true
             }
             else -> super.onOptionsItemSelected(item)
@@ -194,6 +208,7 @@ open class MainActivity : AppCompatActivity()
             R.id.nav_vis     -> // App Bar visibility toggle
             {
                 visSwitch.toggle()
+                if (visSwitch.isChecked)  supportActionBar?.show() else supportActionBar?.hide()
                 true
             }
             R.id.nav_threads -> // Inbox
@@ -219,12 +234,15 @@ open class MainActivity : AppCompatActivity()
      */
     private fun appLaunch()
     {
+        // Launch background data gathering
+        sharedViewModel.getAllThreads()
+
         //Create splash delay
         Handler(Looper.getMainLooper()).postDelayed({
             navController.navigate(R.id.nav_threads)
-            // Hide app bar during startup
-            visSwitch.isChecked = true
-        }, 750)
+            // Show app bar after startup
+            supportActionBar?.show()
+        }, 1150)
     }
 
     /**
@@ -251,103 +269,9 @@ open class MainActivity : AppCompatActivity()
         {
             LogMe().i("WELCOME FRAGMENT: APP LAUNCH")
 
-            // Launch background data gathering
-            sharedViewModel.getAllThreads()
-
             // Start the app on its way after getting permission
             appLaunch()
-
         }
-    }
-
-    /**
-     * ALERT POP DIALOG BOX
-     */
-    fun showAlertWithTextInput()
-    {
-        // Setup
-        val textInputLayout = TextInputLayout(this)
-        textInputLayout.setPadding(
-            resources.getDimensionPixelOffset(R.dimen
-                .dp_19),
-            0,
-            resources.getDimensionPixelOffset(R.dimen.dp_19),
-            0
-        )
-        val input = EditText(this)
-        textInputLayout.hint = "800-555-1212"
-        textInputLayout.addView(input)
-
-        val alert = AlertDialog.Builder(this)
-            .setTitle("Enter Number")
-            .setView(textInputLayout)
-            .setPositiveButton("OK", null)
-            .setNegativeButton("Cancel") { dialog, _ ->
-                dialog.cancel()
-            }
-            .create()
-
-        // Ensure keyboard is up and edit text field is selected
-        alert.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
-        alert.show()
-        input.requestFocus()
-
-        // OK button logic for proper formatting
-        alert.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-
-            if (Phone.pho().isCellPhoneNumber(input.text.toString())!!)
-            {
-                l.d("DIALOG BOX OK: GOOD NUMBER")
-                sharedViewModel.setTitle(PhoneNumberUtils.formatNumber(input.text.toString()))
-                sharedViewModel.tempSms = Sms.AppSmsShort()
-                sharedViewModel.tempSms!!.address = input.text.toString()
-                sharedViewModel.findThreadId()
-                alert.dismiss()
-            }
-            else
-            {
-                l.d("DIALOG BOX OK: BAD NUMBER")
-                input.requestFocus()
-                input.highlightColor = Color.RED
-                input.selectAll()
-                val toast = Toast.makeText(applicationContext, dialogError, Toast.LENGTH_LONG)
-                toast.setGravity(Gravity.TOP,0,0)
-                toast.show()
-            }
-        }
-
-        input.addTextChangedListener(object : TextWatcher{
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int)
-            {
-//                TODO("Nothing to implement")
-            }
-
-            // Builds the hint string as input arrives
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int)
-            {
-                if (start <= 2)
-                {
-                    textInputLayout.hint = "(${s?.toString()})"
-                }
-                if(start in 3..5)
-                {
-                    var temp = "(${s?.subSequence(0..2)})"
-                    temp = "$temp ${s?.subSequence(3..start - before)}"
-                    textInputLayout.hint = temp
-                }
-                if(start in 6..9)
-                {
-                    var temp = "(${s?.subSequence(0..2)}) ${s?.subSequence(3..5)}-"
-                    temp = "$temp${s?.subSequence(6..start - before)}"
-                    textInputLayout.hint = temp
-                }
-            }
-
-            override fun afterTextChanged(s: Editable?)
-            {
-//                TODO("Nothing to implement")
-            }
-        })
     }
 
     override fun onRequestPermissionsResult(
@@ -366,9 +290,6 @@ open class MainActivity : AppCompatActivity()
                 {
                     Toast.makeText(this, "Read SMS permission granted", Toast.LENGTH_SHORT).show()
 
-                    // Launch background data gathering
-                    sharedViewModel.getAllThreads()
-
                     // Start the app on its way after getting permission
                     appLaunch()
                 }
@@ -380,9 +301,6 @@ open class MainActivity : AppCompatActivity()
             else ->
             {
                 super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-
-                // Launch background data gathering
-                sharedViewModel.getAllThreads()
 
                 // Start the app on its way after getting permission
                 appLaunch()

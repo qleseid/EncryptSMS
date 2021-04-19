@@ -7,7 +7,7 @@ import org.junit.runners.Suite
 @Suite.SuiteClasses(
     MainActivityTest::class,
     FabActivityTest::class,
-    AboutActivityTest::class
+    FullMainActivityTest::class
 
 )
 class TestSuite

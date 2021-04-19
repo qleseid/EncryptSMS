@@ -32,7 +32,7 @@ class ContactsKeyRepository(_context: Context)
                 }
             }
         }
-        l.d("CONTACTS KEY REPOSITORY: GET ALL SIZE: ${data.size}")
+        l.d("CKR:: GET ALL SIZE: ${data.size}")
         return data
     }
 
@@ -51,7 +51,7 @@ class ContactsKeyRepository(_context: Context)
                 success = true
             }
         }
-        l.d("CONTACTS KEY REPOSITORY: CREATE: $success")
+        l.d("CKR:: CREATE: $success")
         return success
     }
 
@@ -67,7 +67,7 @@ class ContactsKeyRepository(_context: Context)
         withContext(Dispatchers.IO){
             success = contactKeyDoa.update(_key)
         }
-        l.d("CONTACTS KEY REPOSITORY: UPDATE: $success")
+        l.d("CKR:: UPDATE: $success")
         return success
     }
 
@@ -83,7 +83,7 @@ class ContactsKeyRepository(_context: Context)
         withContext(Dispatchers.IO){
             success = contactKeyDoa.delete(_key)
         }
-        l.d("CONTACTS KEY REPOSITORY: DELETE: $success")
+        l.d("CKR:: DELETE: $success")
         return success
     }
 }

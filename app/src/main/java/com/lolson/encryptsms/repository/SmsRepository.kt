@@ -40,7 +40,7 @@ class SmsRepository(
                 }
             }
         }
-        l.d("SMS repository: GET-ALL-MESSAGES")
+        l.d("SR:: GET-ALL-MESSAGES")
         return data
     }
 
@@ -62,7 +62,7 @@ class SmsRepository(
                 }
             }
         }
-        l.d("SMS repository: GET-ALL-THREADS")
+        l.d("SR:: GET-ALL-THREADS")
         return data
     }
 
@@ -98,7 +98,7 @@ class SmsRepository(
         withContext(Dispatchers.IO){
             smsDoa.find(address).let { result = it }
         }
-        l.d("SMS repository: FIND")
+        l.d("SR:: FIND")
         return result
     }
 
@@ -116,7 +116,7 @@ class SmsRepository(
         withContext(Dispatchers.IO){
             smsDoa.update(msg).let { result = it }
         }
-        l.d("SMS repository: UPDATE")
+        l.d("SR:: UPDATE")
         return result
     }
 
@@ -134,7 +134,7 @@ class SmsRepository(
         withContext(Dispatchers.IO){
             smsDoa.delete(msg).let { result = it }
         }
-        l.d("SMS repository: DELETE")
+        l.d("SR:: DELETE")
         return result
     }
 }

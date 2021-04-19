@@ -20,14 +20,14 @@ import kotlin.experimental.xor
 
 class SecretTest
 {
-    private val keyAgree = KeyAgreement.getInstance("DH")
+    private val keyAgree = KeyAgreement.getInstance("ECDH")
 
     private val myKey = generateDHKeys()
 
     private val list = ArrayList<KeyContent.AppKey>()
     private val contactList = ArrayList<KeyPair>()
-    private lateinit var map: Map<String, SecretKeySpec>
-    private var contactMap = mutableMapOf<String, SecretKeySpec>()
+    private lateinit var map: Map<Long, SecretKeySpec?>
+    private var contactMap = mutableMapOf<Int, SecretKeySpec>()
 
 
     //Logger
@@ -40,19 +40,25 @@ class SecretTest
         for (con in 0..5)
         {
             val k = generateDHKeys()
+
+            l.d("ST:: EC KEY PAIR PRIVATE: ${k.private.encoded.size} PUBLIC:${k.public.encoded.size}")
             contactList.add(k)
-            contactMap["$con"] = generateSecret(k, myKey.public)
+            contactMap[con] = generateSecret(k, myKey.public)
             list.add(
                 KeyContent.AppKey(
-                    "$con",
+                    con,
                     false,
-                    "$con",
+                    1L,
+                    con.toLong(),
                     k.public
                 )
             )
         }
         // Map the ArrayList with secrets generated
-        map = list.associate { it.thread_id to generateSecret(myKey, it.publicKey) }
+        map = list.associate { it.thread_id to it.publicKey?.let { it1 ->
+            generateSecret(myKey,
+                it1)
+        } }
     }
 
     /**
@@ -80,7 +86,8 @@ class SecretTest
     private fun generateDHKeys()
             : KeyPair
     {
-        val keyGen = KeyPairGenerator.getInstance("DH")
+        val keyGen = KeyPairGenerator.getInstance("EC")
+//        l.d("ST:: EC KEY PAIR GENERATOR: ${Security.getProvider("AndroidOpenSSL version 1.0").info}")
         return keyGen.genKeyPair()
     }
 
@@ -99,7 +106,7 @@ class SecretTest
         val result = cipher.doFinal(msg.toByteArray())
 
         val res = Base64.getEncoder().encodeToString(result)
-        l.d("ENCRYPT: $res")
+        l.d("ST:: ENCRYPT: $res")
         return res
     }
 
@@ -115,7 +122,7 @@ class SecretTest
         var result = msg
         try
         {
-            l.d("DECRYPT BEFORE: $msg SIZE:${msg.length}")
+            l.d("ST:: DECRYPT BEFORE: $msg SIZE:${msg.length}")
             val dmsg = Base64.getDecoder().decode(msg)
 
             val cipherD = Cipher.getInstance("AES/GCM/NoPadding")
@@ -125,10 +132,10 @@ class SecretTest
         }
         catch (e: Exception)
         {
-            l.d("DECRYPT ERROR: $e")
+            l.d("ST:: DECRYPT ERROR: $e")
         }
 
-        l.d("DECRYPT AFTER: $result SIZE:${result.length}")
+        l.d("ST:: DECRYPT AFTER: $result SIZE:${result.length}")
 
         return result
     }
@@ -147,7 +154,7 @@ class SecretTest
     @Test
     fun `check map functionality`()
     {
-        assertNotSame("Map to second index but get first", 0, map["1"])
+        assertNotSame("Map to second index but get first", 0, map[1])
     }
 
     @Test
@@ -174,14 +181,14 @@ class SecretTest
     @Test
     fun `test indexing of array on thread id`()
     {
-        assertEquals("Index Int should return 1", map["0"], map[list[0].thread_id])
-        assertNotEquals("Index Int should be different from 1", map["0"], map[list[1].thread_id])
+        assertEquals("Index Int should return 1", map[0], map[list[0].thread_id])
+        assertNotEquals("Index Int should be different from 1", map[0], map[list[1].thread_id])
     }
 
     @Test
     fun `test map return if no match`()
     {
-        assertEquals("No Match of key in map", null, map["21"])
+        assertEquals("No Match of key in map", null, map[21])
     }
 
     @ExperimentalUnsignedTypes
@@ -196,27 +203,28 @@ class SecretTest
         .encodeToByteArray()
         val iv = ByteArray(12)
 
-        l.d("TIME: '${primer.toUByteArray()}' LENGTH: '${primer.size} IV: '${iv.toUByteArray()}'")
+        l.d("ST:: TIME: '${primer.toUByteArray()}' LENGTH: '${primer.size} IV: '${iv.toUByteArray
+            ()}'")
 
         // Create the IV
         for (con in iv.indices)
         {
             val bite = ((primer[con].xor(((con + 1) * 123).toByte()))and 0b11111111.toByte())
-            l.d("BYTE FILLER: '${bite}' position: '$con' IV: ${iv[con]}")
+            l.d("ST:: BYTE FILLER: '${bite}' position: '$con' IV: ${iv[con]}")
 
             iv[con] = bite
         }
 
-        var msg1 = map["0"]?.let { encrypt(msg, iv, it) }
-        var msg2 = map["1"]?.let { encrypt(msg, iv, it) }
+        var msg1 = map[0]?.let { encrypt(msg, iv, it) }
+        var msg2 = map[1]?.let { encrypt(msg, iv, it) }
 
         assertEquals("Message is: Hello World", msg, msg)
         assertNotEquals("Message should not be words", msg1, msg2)
         assertNotEquals("Message should not be words", msg, msg1)
         assertNotEquals("Message should not be words", msg, msg2)
 
-        msg1 = map["0"]?.let { msg1?.let { it1 -> decrypt(it1, iv, it) } }
-        msg2 = map["1"]?.let { msg2?.let { it2 -> decrypt(it2, iv, it) } }
+        msg1 = map[0]?.let { msg1?.let { it1 -> decrypt(it1, iv, it) } }
+        msg2 = map[1]?.let { msg2?.let { it2 -> decrypt(it2, iv, it) } }
 
         assertEquals(
             "Decrypted messages is: Hello World",
@@ -239,7 +247,8 @@ class SecretTest
         val primer = ((time shl 6) + (time shl 3) + time).toString().encodeToByteArray()
         val iv = ByteArray(12)
 
-        l.d("TIME: '${primer.toUByteArray()}' LENGTH: '${primer.size} IV: '${iv.toUByteArray()}'")
+        l.d("ST:: TIME: '${primer.toUByteArray()}' LENGTH: '${primer.size} IV: '${iv.toUByteArray
+            ()}'")
 
         // Create the IV
 //        for (con in 0..11)
@@ -248,14 +257,14 @@ class SecretTest
             val pri = primer[primer.size - (con + 1)]
             val bite = ((pri.xor(((con + 1) * 123).toByte())) and 0xFF
                 .toByte())
-            l.d("PRIMER: '${pri} 'BYTE FILLER: '${bite}' position: '$con' IV: ${iv[con]}")
+            l.d("ST:: PRIMER: '${pri} 'BYTE FILLER: '${bite}' position: '$con' IV: ${iv[con]}")
 
             iv[con] = bite
         }
 
         // Encrypt with my generated secret from contacts public key
-        var msg1 = map["0"]?.let { encrypt(msg, iv, it) }
-        var msg2 = map["1"]?.let { encrypt(msg, iv, it) }
+        var msg1 = map[0]?.let { encrypt(msg, iv, it) }
+        var msg2 = map[1]?.let { encrypt(msg, iv, it) }
 
         assertEquals("Message is: Hello World", msg, msg)
         assertNotEquals("Message should not be words", msg1, msg2)
@@ -263,8 +272,8 @@ class SecretTest
         assertNotEquals("Message should not be words", msg, msg2)
 
         // Decrypt with contacts generated secret key
-        msg1 = contactMap["0"]?.let { msg1?.let { it1 -> decrypt(it1, iv, it) } }
-        msg2 = contactMap["1"]?.let { msg2?.let { it2 -> decrypt(it2, iv, it) } }
+        msg1 = contactMap[0]?.let { msg1?.let { it1 -> decrypt(it1, iv, it) } }
+        msg2 = contactMap[1]?.let { msg2?.let { it2 -> decrypt(it2, iv, it) } }
 
         assertEquals(
             "Decrypted messages is: Hello World",

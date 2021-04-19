@@ -7,6 +7,7 @@ object KeySQLiteContract {
     object KeyEntry: BaseColumns{
         const val TABLE_NAME = "keys"
         const val COLUMN_NAME_SENT = "key_sent"
+        const val COLUMN_NAME_CHECK = "last_check"
         const val COLUMN_NAME_ID = "thread_id"
         const val COLUMN_NAME_PUBLICKEY = "public_key"
     }

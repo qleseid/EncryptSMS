@@ -5,6 +5,7 @@ import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import android.provider.BaseColumns
+import androidx.core.database.getBlobOrNull
 import com.lolson.encryptsms.contents.KeyContent
 import com.lolson.encryptsms.contracts.KeySQLiteContract
 import com.lolson.encryptsms.utility.LogMe
@@ -23,7 +24,7 @@ class ContactKeySvcSQLiteImpl(
     companion object {
         //If database schema changes, increment version number
         const val DB_NAME = "keys.db"
-        const val DB_VERSION = 1
+        const val DB_VERSION = 2
 
         /**
          * Create database
@@ -32,6 +33,7 @@ class ContactKeySvcSQLiteImpl(
             "CREATE TABLE ${KeySQLiteContract.KeyEntry.TABLE_NAME} (" +
                     "${BaseColumns._ID} INTEGER PRIMARY KEY," +
                     "${KeySQLiteContract.KeyEntry.COLUMN_NAME_SENT} INTEGER DEFAULT 0," +
+                    "${KeySQLiteContract.KeyEntry.COLUMN_NAME_CHECK} INTEGER DEFAULT 3," +
                     "${KeySQLiteContract.KeyEntry.COLUMN_NAME_ID} TEXT," +
                     "${KeySQLiteContract.KeyEntry.COLUMN_NAME_PUBLICKEY} BLOB)"
 
@@ -56,7 +58,7 @@ class ContactKeySvcSQLiteImpl(
         db: SQLiteDatabase?
     )
     {
-        l.d("ON_CREATE Contact Key SQLite service implementation")
+        l.d("CKSSSLI:: ON_CREATE Contact Key SQLite service implementation")
         db?.execSQL(SQL_CREATE_ENTRIES)
     }
 
@@ -67,7 +69,7 @@ class ContactKeySvcSQLiteImpl(
     )
     {
         //Simple upgrade policy to delete old data and start over
-        l.i("ON_UPGRADE Contact Key SQLite service implementation from version:" +
+        l.i("CKSSSLI:: ON_UPGRADE Contact Key SQLite service implementation from version:" +
                     " $oldVer to: $newVer")
         db?.execSQL(SQL_DELETE_ENTRIES)
         onCreate(db)
@@ -79,7 +81,7 @@ class ContactKeySvcSQLiteImpl(
         newVer: Int
     )
     {
-        l.i("ON_DOWNGRADE Contact Key SQLite service implementation from version:" +
+        l.i("CKSSSLI:: ON_DOWNGRADE Contact Key SQLite service implementation from version:" +
                     " $oldVer to: $newVer")
         onUpgrade(db, oldVer, newVer)
     }
@@ -97,6 +99,7 @@ class ContactKeySvcSQLiteImpl(
         val projection = arrayOf(
             BaseColumns._ID,
             KeySQLiteContract.KeyEntry.COLUMN_NAME_SENT,
+            KeySQLiteContract.KeyEntry.COLUMN_NAME_CHECK,
             KeySQLiteContract.KeyEntry.COLUMN_NAME_ID,
             KeySQLiteContract.KeyEntry.COLUMN_NAME_PUBLICKEY)
 
@@ -113,12 +116,13 @@ class ContactKeySvcSQLiteImpl(
         cursor.moveToFirst()
         while (!cursor.isAfterLast)
         {
-            val tempI = KeyContent.AppKey(
-                cursor.getString(0),                 // key primary id
-                (cursor.getInt(1) == 1),             // sent boolean
-                cursor.getString(2),                 // thread id
-                publicKeyGen(cursor.getBlob(3))      // public key
-            )
+            val tempI = KeyContent.AppKey()
+            tempI.id = cursor.getInt(0)                 // key primary id
+            tempI.sent = (cursor.getInt(1) == 1)             // sent boolean
+            tempI.last_check = cursor.getLong(2)                   // checked long
+            tempI.thread_id = cursor.getLong(3)                 // thread id
+            cursor.getBlobOrNull(4)?.let { tempI.publicKey = publicKeyGen(it) }      // public key
+
             tempList.add(tempI)
             cursor.moveToNext()
         }
@@ -127,7 +131,7 @@ class ContactKeySvcSQLiteImpl(
         rdb.close()
 
         //Number of keys read into list
-        l.d("Contact Key SQLite GET ALL: list size: ${tempList.size}")
+        l.d("CKSSSLI:: Contact Key SQLite GET ALL: list size: ${tempList.size}")
 
         return tempList
     }
@@ -151,10 +155,19 @@ class ContactKeySvcSQLiteImpl(
             .apply {
                 put(KeySQLiteContract.KeyEntry.COLUMN_NAME_SENT,
                     key.sent)
+                put(KeySQLiteContract.KeyEntry.COLUMN_NAME_CHECK,
+                    key.last_check)
                 put(KeySQLiteContract.KeyEntry.COLUMN_NAME_ID,
                     key.thread_id)
-                put(KeySQLiteContract.KeyEntry.COLUMN_NAME_PUBLICKEY,
-                    encodePublicKey(key.publicKey))
+                if (key.publicKey != null)
+                {
+                    put(KeySQLiteContract.KeyEntry.COLUMN_NAME_PUBLICKEY,
+                        key.publicKey?.let { encodePublicKey(it) })
+                }
+                else
+                {
+                    putNull(KeySQLiteContract.KeyEntry.COLUMN_NAME_PUBLICKEY)
+                }
             }
 
         //Insert the new row, returns primary key value: -1 if error
@@ -162,14 +175,14 @@ class ContactKeySvcSQLiteImpl(
         if (newRowId != -1L)
         {
             // Hope key is a reference, then this will work
-            key.id = newRowId.toString()
+            key.id = newRowId.toInt()
         }
 
         //Close database
         wdb.close()
 
         //Row ID result
-        l.d("Contact Key SQLite CREATE row id: $newRowId")
+        l.d("CKSSSLI:: Contact Key SQLite CREATE row id: $newRowId")
         return newRowId
     }
 
@@ -192,14 +205,23 @@ class ContactKeySvcSQLiteImpl(
             .apply {
                 put(KeySQLiteContract.KeyEntry.COLUMN_NAME_SENT,
                     key.sent)
+                put(KeySQLiteContract.KeyEntry.COLUMN_NAME_CHECK,
+                    key.last_check)
                 put(KeySQLiteContract.KeyEntry.COLUMN_NAME_ID,
                     key.thread_id)
-                put(KeySQLiteContract.KeyEntry.COLUMN_NAME_PUBLICKEY,
-                    encodePublicKey(key.publicKey))
+                if (key.publicKey != null)
+                {
+                    put(KeySQLiteContract.KeyEntry.COLUMN_NAME_PUBLICKEY,
+                        key.publicKey?.let { encodePublicKey(it) })
+                }
+                else
+                {
+                    putNull(KeySQLiteContract.KeyEntry.COLUMN_NAME_PUBLICKEY)
+                }
             }
 
         val selection = "${BaseColumns._ID} LIKE ?"
-        val selectArg = arrayOf(key.id)
+        val selectArg = arrayOf("${key.id}")
 
         //Use ID to select row to update
         val count = rdb.update(
@@ -212,7 +234,7 @@ class ContactKeySvcSQLiteImpl(
         rdb.close()
 
         //Number of rows updated
-        l.d("Contact Key SQLITE UPDATE # rows: $count")
+        l.d("CKSSSLI:: Contact Key SQLITE UPDATE # rows: $count")
         return count > 0
     }
 
@@ -231,9 +253,9 @@ class ContactKeySvcSQLiteImpl(
         wdb = this.writableDatabase
 
         val selection = "${BaseColumns._ID} LIKE ?"
-        val selectArg = arrayOf("${key.id.toInt()}")
+        val selectArg = arrayOf("${key.id}")
 
-        //Use ID to select row to update
+        //Use ID to select row to delete
         val count = wdb.delete(
             KeySQLiteContract.KeyEntry.TABLE_NAME,
             selection,
@@ -243,7 +265,7 @@ class ContactKeySvcSQLiteImpl(
         wdb.close()
 
         //Number of rows updated
-        l.d("Contact Key SQLITE DELETE # rows: $count")
+        l.d("CKSSSLI:: Contact Key SQLITE DELETE # rows: $count")
         return count > 0
     }
 
@@ -254,7 +276,7 @@ class ContactKeySvcSQLiteImpl(
         data: ByteArray
     ): PublicKey
     {
-        return KeyFactory.getInstance("DH").generatePublic(X509EncodedKeySpec(data))
+        return KeyFactory.getInstance("EC").generatePublic(X509EncodedKeySpec(data))
     }
 
     /**

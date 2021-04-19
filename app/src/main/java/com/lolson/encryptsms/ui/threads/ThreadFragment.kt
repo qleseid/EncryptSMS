@@ -5,9 +5,7 @@ package com.lolson.encryptsms.ui.threads
 import android.graphics.Color
 import android.os.Bundle
 import android.telephony.PhoneNumberUtils
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.core.content.res.ResourcesCompat
@@ -25,7 +23,6 @@ import com.lolson.encryptsms.R.id
 import com.lolson.encryptsms.data.model.Sms
 import com.lolson.encryptsms.databinding.FragmentThreadsBinding
 import com.lolson.encryptsms.ui.conversation.ConversationFragment
-import com.lolson.encryptsms.utility.LogMe
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -40,9 +37,6 @@ class ThreadFragment : Fragment() {
     private lateinit var adapter: SimpleItemRecyclerViewAdapter
     private val threadsSharedViewModel: MainSharedViewModel by activityViewModels()
 
-    //Logger
-    private var l = LogMe()
-
     override fun onCreateView(
             inflater: LayoutInflater,
             container: ViewGroup?,
@@ -52,10 +46,6 @@ class ThreadFragment : Fragment() {
         // Bindings
         _binding = FragmentThreadsBinding.inflate(inflater, container, false)
         val rootView = binding.root
-
-        // Debug
-        l.d("Threads: On Create View")
-
 
         //Floating action button
         val fab = activity?.findViewById<FloatingActionButton>(R.id.fab)
@@ -72,8 +62,6 @@ class ThreadFragment : Fragment() {
 
         //LiveData for RecyclerView
         threadsSharedViewModel.threads.observe(viewLifecycleOwner, {
-
-            l.d("THREAD MESSAGE LIVE DATA ${it?.size}")
             // Submit recycler the changed list keys
             // The runnable ensures the list is done so positioning works correct
             adapter.submitList(it, kotlinx.coroutines.Runnable {
@@ -111,6 +99,14 @@ class ThreadFragment : Fragment() {
 
         // FAB is removed in other fragments, this brings it back
         activity?.findViewById<FloatingActionButton>(R.id.fab)?.show()
+    }
+
+    override fun onCreateOptionsMenu(
+        menu: Menu,
+        inflater: MenuInflater
+    ) {
+        super.onCreateOptionsMenu(menu, inflater)
+        menu.findItem(R.id.action_invite).isVisible = false
     }
 
     private fun setupRecyclerView(

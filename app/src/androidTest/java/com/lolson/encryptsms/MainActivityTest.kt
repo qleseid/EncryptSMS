@@ -11,10 +11,13 @@ import androidx.test.filters.LargeTest
 import androidx.test.rule.ActivityTestRule
 import androidx.test.rule.GrantPermissionRule
 import androidx.test.runner.AndroidJUnit4
+import com.microsoft.appcenter.espresso.Factory
+import com.microsoft.appcenter.espresso.ReportHelper
 import org.hamcrest.Description
 import org.hamcrest.Matcher
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.TypeSafeMatcher
+import org.junit.After
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -23,6 +26,9 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class MainActivityTest
 {
+    @Rule
+    @JvmField
+    var reportHelper: ReportHelper = Factory.getReportHelper()
 
     @Rule
     @JvmField
@@ -35,6 +41,12 @@ class MainActivityTest
                 "android.permission.SEND_SMS",
                 "android.permission.READ_CONTACTS",
                 "android.permission.READ_SMS")
+
+    @After
+    fun tearDown()
+    {
+        reportHelper.label("Stopping App")
+    }
 
     @Test
     fun mainActivityTest()

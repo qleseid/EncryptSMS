@@ -18,7 +18,7 @@ object CryptoMagic
 
     init
     {
-        l.d("CRYPTO MAGIC")
+        l.d("CM:: CRYPTO MAGIC")
     }
 
     /**
@@ -29,7 +29,7 @@ object CryptoMagic
         key: SecretKeySpec?
     ): String
     {
-        l.d("ENCRYPT: ${msg.body.length}")
+        l.d("CM:: ENCRYPT: ${msg.body.length}")
         var result = msg.body.encodeToByteArray()
         lateinit var cipherText: ByteBuffer
         try
@@ -62,7 +62,7 @@ object CryptoMagic
         }
         catch (e: Exception)
         {
-            l.d("ENCRYPT ERROR: $e")
+            l.d("CM:: ENCRYPT ERROR: $e")
         }
 //        val temp: Sms.AppSmsShort = msg.copy()
 //        temp.body = Base64.encodeToString(result, DEFAULT)
@@ -93,7 +93,7 @@ object CryptoMagic
                 // decoupling and cohesiveness
                 val ivSize = dmsg[IV].toInt()
 
-                l.d("DECRYPT: ${msg.body.length} ${Base64.encodeToString(key?.encoded, DEFAULT)}")
+//                l.d("CM:: DECRYPT: ${msg.body.length}")
 //            val cipherD = Cipher.getInstance("AES/CBC/PKCS5PADDING")
 //            cipherD.init(Cipher.DECRYPT_MODE, key, IvParameterSpec(dmsg, 0, ivSize))
                 val cipherD = Cipher.getInstance("AES/GCM/NoPadding")
@@ -107,7 +107,7 @@ object CryptoMagic
         }
         catch (e: Exception)
         {
-            l.d("DECRYPT ERROR: $e")
+//            l.d("CM:: DECRYPT ERROR: $e")
         }
 //        l.d("DECRYPT RESULTS: $result")
         return result
@@ -119,7 +119,7 @@ object CryptoMagic
     fun generateDHKeys()
             :KeyPair
     {
-        val keyGen = KeyPairGenerator.getInstance("DH")
+        val keyGen = KeyPairGenerator.getInstance("EC")
         return keyGen.genKeyPair()
 //        pub_key = keyPair.public
 //        pvt_key = keyPair.private

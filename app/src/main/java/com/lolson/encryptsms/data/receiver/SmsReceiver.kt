@@ -22,7 +22,7 @@ class SmsReceiver: BroadcastReceiver()
         intent: Intent?
     ) {
         //TODO: Finish adding where the received will go.
-        l.d("SMS RECEIVER: ON RECEIVE: ${context.toString()}")
+        l.d("SR:: ON RECEIVE: ${context.toString()}")
 
         Telephony.Sms.Intents.getMessagesFromIntent(intent)?.let {
             val subId = intent?.extras?.getInt("subscription", -1) ?: -1
@@ -31,7 +31,7 @@ class SmsReceiver: BroadcastReceiver()
 
             val thread = Thread{
                 run {
-                    l.d("SMS RECEIVER: Receive Thread")
+                    l.d("SR:: Receive Thread")
                     receiveSms(subId, it, context)
                     pendingResult.resultCode = 1
                     pendingResult.finish()
@@ -53,7 +53,7 @@ class SmsReceiver: BroadcastReceiver()
             val smsM = context?.let { SmsManager(it) }
             if (smsM!!.insertRecSms(subId, add, body, time))
             {
-                l.d("SMS RECEIVE: INSERT SUCCESS")
+                l.d("SR:: INSERT SUCCESS")
                 ReceiveNewSms.set(true)
             }
         }
