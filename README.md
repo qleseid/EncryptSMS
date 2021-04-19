@@ -22,7 +22,7 @@ This project is interesting idea that I'm chasing down. It would be foolish to a
 
 ### Documentation
 
-![Doc version](https://img.shields.io/badge/doc.odt-v1.13-blueviolet)
+![Doc version](https://img.shields.io/badge/doc.odt-v1.14-blueviolet)
 
 
 The <span style="color:blue">**docs**</span> folder contains the running project document. It will be updated weekly.
@@ -32,6 +32,8 @@ The <span style="color:blue">**docs**</span> folder contains the running project
 [Current Build](./docs/apk)
 
 This project is changing constantly, **USE AT YOUR OWN RISK!**
+
+Current: <span style="color:red">*2.1v*</span>
 
 # Legal
 
