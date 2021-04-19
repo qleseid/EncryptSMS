@@ -33,7 +33,7 @@ The <span style="color:blue">**docs**</span> folder contains the running project
 
 This project is changing constantly, **USE AT YOUR OWN RISK!**
 
-Current: <span style="color:red">*2.1v*</span>
+Current: **2.1v**
 
 # Legal
 
