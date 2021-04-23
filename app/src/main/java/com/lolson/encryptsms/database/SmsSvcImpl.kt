@@ -66,7 +66,7 @@ class SmsSvcImpl(
      */
     override fun find(
         address: String
-    ): Long
+    ): ArrayList<Sms.AppSmsShort>?
     {
         return smsM.getThreadId(address)
     }
@@ -78,7 +78,9 @@ class SmsSvcImpl(
         msg: Sms.AppSmsShort
     ): Boolean
     {
-        TODO("Not yet implemented")
+        val result = smsM.updateMessage(msg)
+        l.d("SSI:: UPDATE: $result %:% ${msg.id}")
+        return ( result > 0)
     }
 
     /**
@@ -88,7 +90,9 @@ class SmsSvcImpl(
         msg: Sms.AppSmsShort
     ): Boolean
     {
-        TODO("Not yet implemented")
+        val result = smsM.deleteMessage(msg.id)
+        l.d("SSI:: DELETE: $result %:% ${msg.id}")
+        return ( result > 0)
     }
 
 

@@ -5,9 +5,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.navigation.findNavController
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.lolson.encryptsms.R
 import com.lolson.encryptsms.databinding.FragmentWelcomeBinding
+import com.lolson.encryptsms.utility.LogMe
+import kotlin.system.exitProcess
 
 
 /**
@@ -20,6 +23,12 @@ class WelcomeFragment : Fragment()
     // Binding view
     private var _binding: FragmentWelcomeBinding? = null
     private val binding get() = _binding!!
+
+    // Logic to redirect after creation
+    private var firstLaunch = 0
+
+    //Logger
+    private var l = LogMe()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -47,7 +56,33 @@ class WelcomeFragment : Fragment()
     override fun onPause()
     {
         super.onPause()
+        l.d("WF:: ON PAUSE")
+        firstLaunch += 1
         // Fall from fullscreen
         activity?.window?.clearFlags(1024)
+    }
+
+    override fun onResume()
+    {
+        super.onResume()
+        l.d("WF:: ON RESUME")
+
+        // Clean exit from the app after 2 backs
+        when (firstLaunch)
+        {
+            0 ->
+            {
+                l.d("WF:: ON RESUME FIRST LAUNCH")
+            }
+            1 ->
+            {
+                activity?.findNavController(R.id.nav_host_fragment)?.navigate(R.id.nav_threads)
+            }
+            else ->
+            {
+                l.d("WF:: ON RESUME EXIT")
+                exitProcess(2)
+            }
+        }
     }
 }

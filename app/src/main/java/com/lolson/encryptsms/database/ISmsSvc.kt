@@ -19,7 +19,7 @@ interface ISmsSvc
     fun send(msg: Sms.AppSmsShort): Boolean
 
     // Find an SMS by its address, return thread id
-    fun find(address: String): Long
+    fun find(address: String): ArrayList<Sms.AppSmsShort>?
 
     // Update SMS in database
     fun update(msg: Sms.AppSmsShort): Boolean

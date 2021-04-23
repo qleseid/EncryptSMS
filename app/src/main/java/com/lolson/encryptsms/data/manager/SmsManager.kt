@@ -2,9 +2,12 @@
 
 package com.lolson.encryptsms.data.manager
 
+import android.app.role.RoleManager
 import android.content.Context
 import android.database.Cursor
 import android.net.Uri
+import android.os.Build
+import android.provider.BaseColumns
 import android.provider.Telephony
 import android.telephony.SmsManager
 import androidx.core.content.contentValuesOf
@@ -78,24 +81,43 @@ class SmsManager(
 
     fun getThreadId(
         address: String
-    ): Long
+    ): ArrayList<Sms.AppSmsShort>?
     {
-        var succ = -1L
         val res: ArrayList<Sms.AppSmsShort>? = ArrayList()
-        val where = "address = $address"
+        var nn = Phone.pho(
+            null,
+            address
+        ).mCleanNumber
+
+        if (nn?.length!! > 10)
+        {
+            l.d("SMSM:: GET THREAD ID NUMBER TRIM BEFORE: $nn")
+            nn = nn.substring(nn.length - 10, nn.length)
+            l.d("SMSM:: GET THREAD ID NUMBER TRIM AFTER: $nn")
+        }
+
+        val where = "address LIKE '%$nn%'"
         if (res != null)
         {
             getAllSms(where, null)?.let {
                 res.addAll(it)
             }
         }
+        return res
+    }
 
-        if (res?.size!! > 0)
+    private fun checkPermission(
+    ):Boolean
+    {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
         {
-            l.d("SMSM:: GET THREAD ID ${res.size} ${res[0].thread_id}")
-            succ = res[0].thread_id
+            _context.getSystemService(RoleManager::class.java)
+                ?.isRoleHeld(RoleManager.ROLE_SMS) == true
         }
-        return succ
+        else
+        {
+            Telephony.Sms.getDefaultSmsPackage(_context) == _context.packageName
+        }
     }
 
     /**
@@ -111,7 +133,7 @@ class SmsManager(
         val smsM = SmsManager.getDefault()
 
         // Check if app is default; have to manage provider if so
-        if (Telephony.Sms.getDefaultSmsPackage(_context) == _context.packageName)
+        if (checkPermission())
             {
                 l.d("SMSM:: SEND SMS AS DEFAULT")
                 smsM.sendMultipartTextMessage(
@@ -528,8 +550,7 @@ class SmsManager(
     {
         for (i in 0 until column.columnCount)
         {
-            l.d(
-                "SMSM:: COLUMNS DEBUGGER: ${column.getColumnName(i)} ${
+            l.d("SMSM:: COLUMNS DEBUGGER: ${column.getColumnName(i)} ${
                     column.getColumnIndex(
                         column.getColumnName(
                             i
@@ -538,5 +559,36 @@ class SmsManager(
                 }"
             )
         }
+    }
+
+    /**
+     * UPDATE MESSAGE BY _ID
+     */
+    fun updateMessage(
+        sms: Sms.AppSmsShort
+    ): Int
+    {
+        val values = contentValuesOf(
+            Telephony.Sms.READ to sms.read
+        )
+
+        return _context.contentResolver.update(
+            SMS_CONTENT_URI,
+            values,
+            BaseColumns._ID + "=" + sms.id,
+            null
+        )
+    }
+
+    /**
+     * DELETE MESSAGE BY _ID
+     */
+    fun deleteMessage(
+        id: Int
+    ): Int
+    {
+        return _context.contentResolver.delete(
+            SMS_CONTENT_URI, BaseColumns._ID + "=" + id,
+            null)
     }
 }

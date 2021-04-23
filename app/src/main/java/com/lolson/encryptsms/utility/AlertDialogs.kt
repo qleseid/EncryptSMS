@@ -6,20 +6,25 @@ import android.telephony.PhoneNumberUtils
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.Gravity
+import android.view.View
 import android.view.WindowManager
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.coordinatorlayout.widget.CoordinatorLayout
+import com.google.android.material.snackbar.BaseTransientBottomBar
+import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputLayout
 import com.lolson.encryptsms.MainSharedViewModel
 import com.lolson.encryptsms.R
 import com.lolson.encryptsms.data.model.Phone
 import com.lolson.encryptsms.data.model.Sms
 
-class AlertDialogs(_context: Context, _viewModel: MainSharedViewModel)
+class AlertDialogs(_context: Context, _viewModel: MainSharedViewModel, _findViewById: View)
 {
     private val mContext = _context
     private val mVM = _viewModel
+    private val mView = _findViewById
 
     //Logger
     private var l = LogMe()
@@ -33,27 +38,32 @@ class AlertDialogs(_context: Context, _viewModel: MainSharedViewModel)
      */
     fun alertLauncher(
         selection: Int,
-        message: String?
+        message: String?,
+        command: String?
     )
     {
-        l.d("AD:: ALERT LAUNCHER: $selection")
+        l.d("AD:: ALERT LAUNCHER: $selection : $command")
         when(selection)
         {
             0 ->
             {
-                noKeyFoundAlert()
-                mVM.alertHelper(-1, null)
+                inviteSendAlert()
+                mVM.alertHelper(-1, message, command)
             }
-            1 -> { appNotDefault() }
+            1 ->
+            {
+                snackMessages(message, command)
+                mVM.alertHelper(-11, message, command)
+            }
             2 ->
             {
                 numberInputAlert()
-                mVM.alertHelper(-22, null)
+                mVM.alertHelper(-22, message, command)
             }
             3 ->
             {
                 toastMessages(message)
-                mVM.alertHelper(-33, null)
+                mVM.alertHelper(-33, message, command)
             }
             else -> { }
         }
@@ -66,27 +76,50 @@ class AlertDialogs(_context: Context, _viewModel: MainSharedViewModel)
         message: String?
     )
     {
-        val toast = Toast.makeText(mContext.applicationContext, message,
-        Toast
-            .LENGTH_LONG)
-        toast.setGravity(Gravity.TOP,0,0)
-        toast.show()
+        Toast.makeText(mContext.applicationContext, message, Toast.LENGTH_LONG).show()
     }
 
     /**
      * SNACK BAR BUILDER
      */
     private fun snackMessages(
-        message: String?
+        message: String?,
+        command: String?
     )
     {
-        // TODO:: Figure out snack bar
-//        val view = MainActivity::class
-//        val mSnackbar = Snackbar.make(mContext as MainActivity,
-//            MainActivity::findViewById(R.id.my_coordinator_layout),
-//            "Snack up buddy",
-//            2000)
+        val snack = Snackbar.make(mView,"" + message, Snackbar.LENGTH_LONG)
+        val view = snack.view
+        val params = view.layoutParams as CoordinatorLayout.LayoutParams
+        params.gravity = Gravity.TOP
+        params.height = 156
+        view.layoutParams = params
+        snack.animationMode = BaseTransientBottomBar.ANIMATION_MODE_SLIDE
 
+        command?.let {cmd ->
+            snack.setAction(cmd) {
+                when (cmd)
+                {
+                    "Delete" ->
+                    {
+                        mVM.deleteSmsMessage()
+                        l.d("AD:: SNACK BAR COMMAND Delete: $cmd")
+                    }
+                    "Undo"   ->
+                    {
+
+                    }
+                    "Bacon"  ->
+                    {
+
+                    }
+                    else     ->
+                    {
+                        l.d("AD:: SNACK BAR COMMAND ELSE: $cmd")
+                    }
+                }
+            }
+        }
+        snack.show()
     }
 
     /**
@@ -182,7 +215,7 @@ class AlertDialogs(_context: Context, _viewModel: MainSharedViewModel)
     /**
      * ALERT POP DIALOG BOX FOR INVITE ACTION
      */
-    private fun noKeyFoundAlert()
+    private fun inviteSendAlert()
     {
         val alert = AlertDialog.Builder(mContext)
             .setTitle("Send Invite")

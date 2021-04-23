@@ -19,7 +19,7 @@ class SmsHelper
         tempSms.type = 2
         tempSms.date = System.currentTimeMillis()
         tempSms.date_sent = tempSms.date
-        tempSms.creator = "com.example.encryptsms"
+        tempSms.creator = "com.lolson.encryptsms"
         tempSms.body = msg
 
         l.d("SH:: SMS BUILDER: ${tempSms.read}")
@@ -43,8 +43,18 @@ class SmsHelper
         {
             if (d.thread_id == sms.thread_id)
             {
+                // Update thread info
                 data[con].body = sms.body
                 data[con].read = sms.read
+                data[con].date = sms.date
+
+                // Move to top, which is at the end!?
+                data.add(data[con])
+                // Insert adds to end, so original should be at the same spot
+                data.removeAt(con)
+
+                l.d("SH:: SMS THREAD UPDATE: $con")
+                break
             }
         }
         return ArrayList(data)
