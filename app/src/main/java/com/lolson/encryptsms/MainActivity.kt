@@ -1,10 +1,14 @@
 package com.lolson.encryptsms
 
 import android.Manifest
+import android.app.role.RoleManager
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.provider.Telephony
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.RelativeLayout
@@ -14,7 +18,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SwitchCompat
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.view.get
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.navigation.NavController
 import androidx.navigation.findNavController
@@ -26,6 +29,7 @@ import com.lolson.encryptsms.data.livedata.ReceiveNewSms
 import com.lolson.encryptsms.databinding.ActivityMainBinding
 import com.lolson.encryptsms.utility.AlertDialogs
 import com.lolson.encryptsms.utility.LogMe
+import com.lolson.encryptsms.utility.NotificationUtils
 
 /**
  * Main activity with navigation drawer and action bar.
@@ -52,13 +56,18 @@ open class MainActivity : AppCompatActivity()
     private lateinit var navView: NavigationView
     private lateinit var navController: NavController
 
+    // View Model
     private val sharedViewModel: MainSharedViewModel by viewModels()
+
+    // Saved state
+    private var saveState: Bundle? = null
 
     override fun onCreate(
         savedInstanceState: Bundle?
     )
     {
         super.onCreate(savedInstanceState)
+        saveState = savedInstanceState
         l.d("MA:: ON CREATE")
 
         //Inflate all views and bind to variable
@@ -96,24 +105,30 @@ open class MainActivity : AppCompatActivity()
             {
                 sharedViewModel.refresh(0)
                 ReceiveNewSms.set(false)
+                NotificationUtils(this).getManager().cancelAll()
             }
         })
 
         // Handle alert dialog launches from all over the fragments within this activity
         sharedViewModel.alert.observe(this, {
             l.d("MA:: ALERT OBSERVER $it")
-            AlertDialogs(this, sharedViewModel).alertLauncher(it.first, it.second)
+            AlertDialogs(this, sharedViewModel, binding.appBarMain.myCoordinatorLayout)
+                .alertLauncher(it.first, it.second, it.third)
         })
 
         // Drawer toolbar visibility toggle listener
         visSwitch = binding.navView.menu[1]
-            .actionView.findViewById(R.id.vis_switch_compat) as SwitchCompat
+            .actionView.findViewById(R.id.vis_switch_compat)
 
-        // Hide app bar during startup
-        supportActionBar?.hide()
+        // If first start, this will be null
+        if (savedInstanceState?.isEmpty == null)
+        {
+            // Hide app bar during startup
+            supportActionBar?.hide()
 
-        // Check Permissions
-        checkSmsPermission()
+            // Check app is default
+            defaultApp()
+        }
     }
 
     override fun onPause()
@@ -126,6 +141,7 @@ open class MainActivity : AppCompatActivity()
     {
         super.onDestroy()
         l.d("MA:: ON DESTROY")
+//        sharedViewModel.cleanUpMessages()
     }
 
     /**
@@ -179,7 +195,7 @@ open class MainActivity : AppCompatActivity()
             //Handles the home menu click event
             R.id.action_settings ->
             {
-                sharedViewModel.alertHelper(3, appBarSetting)
+                sharedViewModel.alertHelper(3, appBarSetting, null)
 //                Toast.makeText(applicationContext, appBarSetting, Toast.LENGTH_LONG).show()
 
                 //Nav drawer is the settings page
@@ -189,7 +205,7 @@ open class MainActivity : AppCompatActivity()
             R.id.action_invite ->
             {
                 // TODO:: have this check invites first
-                sharedViewModel.alertHelper(0, null)
+                sharedViewModel.alertHelper(0, null, null)
                 true
             }
             else -> super.onOptionsItemSelected(item)
@@ -230,19 +246,79 @@ open class MainActivity : AppCompatActivity()
     }
 
     /**
+     * CHECK DEFAULT APP
+     */
+    private fun defaultApp()
+    {
+        if (Telephony.Sms.getDefaultSmsPackage(this) != this.packageName)
+        {
+            LogMe().i("MA:: DEFAULT APP CHECK")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
+            {
+                val roleManager = getSystemService(RoleManager::class.java) as RoleManager
+                val intent = roleManager.createRequestRoleIntent(RoleManager.ROLE_SMS)
+                startActivityForResult(intent, 4216)
+            }
+            else
+            {
+                val smsIntent = Intent(Telephony.Sms.Intents.ACTION_CHANGE_DEFAULT)
+                smsIntent.putExtra(Telephony.Sms.Intents.EXTRA_PACKAGE_NAME, this.packageName)
+                startActivityForResult(smsIntent, 4217)
+            }
+        }
+        else
+        {
+            LogMe().i("MA:: DEFAULT APP CHECK ELSE")
+
+            // Check Permissions
+            checkSmsPermission()
+
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?)
+    {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == 4216 || requestCode == 4217)
+//            if (requestCode.toString() == "4216")
+        {
+            LogMe().i("MA:: ON ACTIVITY RESULT: $requestCode")
+            checkSmsPermission()
+        }
+        else
+        {
+            LogMe().i("MA:: ON ACTIVITY RESULT ELSE: $requestCode -:- $requestCode -:- $data")
+        }
+    }
+
+    /**
      * LAUNCH APP
      */
     private fun appLaunch()
     {
         // Launch background data gathering
-        sharedViewModel.getAllThreads()
+        if (saveState?.isEmpty == null)
+        {
+            sharedViewModel.getAllThreads()
+        }
 
-        //Create splash delay
+        // Create splash delay
         Handler(Looper.getMainLooper()).postDelayed({
             navController.navigate(R.id.nav_threads)
             // Show app bar after startup
             supportActionBar?.show()
-        }, 1150)
+        }, 850)
+
+        // Allow app to start normal and then move to Conversation
+        Handler(Looper.getMainLooper()).postDelayed({
+        intent.extras?.getString("address")?.let {
+            // Nav to Conversation Fragment and adds in the selected thread as arg
+            val bundle = Bundle().apply {
+                putSerializable("notify", it)
+            }
+            navController.navigate(R.id.nav_conversations, bundle)
+        }
+        }, 990)
     }
 
     /**
@@ -250,27 +326,45 @@ open class MainActivity : AppCompatActivity()
      */
     private fun checkSmsPermission()
     {
-        if (this.let {
-                ContextCompat.checkSelfPermission(
-                    it, Manifest.permission
-                        .READ_SMS)
-            }
-            != PackageManager.PERMISSION_GRANTED)
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.READ_SMS
+            ) ==  PackageManager.PERMISSION_GRANTED)
         {
-            this.let {
-                ActivityCompat.requestPermissions(
-                    it, arrayOf(
-                        Manifest.permission.READ_SMS,
-                        Manifest.permission.SEND_SMS,
-                        Manifest.permission.READ_CONTACTS), 0)
-            }
+            LogMe().i("MA:: CHECK PERMISSION: APP LAUNCH")
+            appLaunch()
         }
         else
         {
-            LogMe().i("WELCOME FRAGMENT: APP LAUNCH")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
+                if(shouldShowRequestPermissionRationale(Manifest.permission.READ_SMS))
+                {
+                    // TODO:: Create a rationale page to explain stuff
+                    LogMe().i("MA:: CHECK PERMISSION SHOW RATIONALE")
+                    smsRequests()
+                }
+                else
+                {
+                    LogMe().i("MA:: CHECK PERMISSION SHOW RATIONALE ELSE")
+                    smsRequests()
+                }
+            }
+            else
+            {
+                LogMe().i("MA:: CHECK PERMISSION ELSE")
+                smsRequests()
+            }
+        }
+    }
 
-            // Start the app on its way after getting permission
-            appLaunch()
+    private fun smsRequests()
+    {
+        this.let {
+            ActivityCompat.requestPermissions(
+                it, arrayOf(
+                    Manifest.permission.READ_SMS,
+                    Manifest.permission.SEND_SMS,
+                    Manifest.permission.READ_CONTACTS), 0)
         }
     }
 
@@ -279,23 +373,26 @@ open class MainActivity : AppCompatActivity()
         permissions: Array<out String>,
         grantResults: IntArray)
     {
-        LogMe().i("WELCOME: ACTIVITY")
+        LogMe().i("MA:: REQUEST PERMISSION RESULT: $requestCode ${grantResults.toList()}")
         // Make sure it's our original READ_CONTACTS request
         when (requestCode)
         {
-            1    ->
+            0    ->
             {
                 if (grantResults.isNotEmpty() &&
                     grantResults[0] == PackageManager.PERMISSION_GRANTED)
                 {
-                    Toast.makeText(this, "Read SMS permission granted", Toast.LENGTH_SHORT).show()
+                    super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+                    Toast.makeText(this, "Read SMS permission granted", Toast.LENGTH_LONG).show()
 
                     // Start the app on its way after getting permission
                     appLaunch()
                 }
                 else
                 {
-                    Toast.makeText(this, "Read SMS permission denied", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Need Read SMS permission! Change in Phone Settings", Toast
+                        .LENGTH_LONG).show()
+//                    exitProcess(7)
                 }
             }
             else ->

@@ -46,6 +46,7 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
     val dhKeyGood: LiveData<Boolean>
         get() = _dhKeyGood
 
+    // 1: Keys retrieved, 2: # keys, 3: # contacts
     private var _contactKeysGood: MutableLiveData<Triple<Boolean, String, String>> = MutableLiveData(
         Triple(false, "0", "0"))
     val contactKeysGood: LiveData<Triple<Boolean, String, String>>
@@ -79,12 +80,14 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
         get() = _title
 
     // Alert Dialog selector
-    private var _alert: MutableLiveData<Pair<Int, String?>> = MutableLiveData(Pair(-1, null))
-    val alert: LiveData<Pair<Int, String?>> = _alert
+    private var _alert: MutableLiveData<Triple<Int, String?, String?>> = MutableLiveData(Triple(
+        -1,
+        null,
+        null))
+    val alert: LiveData<Triple<Int, String?, String?>> = _alert
         .asFlow()
         .catch { l.e("MVM:: ALERT FLOW ERROR") }
         .asLiveData(Dispatchers.Default)
-//        get() = _alert
 
     // Contact keys
     private var _contactKeys: ArrayList<KeyContent.AppKey> = ArrayList()
@@ -240,34 +243,40 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
      */
     fun alertHelper(
         select: Int,
-        msg: String?
+        msg: String?,
+        cmd: String?
     )
     {
         viewModelScope.launch(Dispatchers.Default) {
-            l.d("MVM:: ALERT HELPER SELECTION: $select")
+            l.d("MVM:: ALERT HELPER SELECTION: $select -:- $cmd")
 
             when (select)
             {
-                0    ->
+                0    -> // Invite alert dialog
                 {
                     // Check invite and alert when encrypt set to true
 //                    TODO:: Fix this before sending it
 //                    if (_encryptSwitch.value!! && tempSms!!.thread_id != -1L)
                     if (tempSms!!.thread_id != -1L)
                     {
-//                        if (!checkInviteSent(tempSms!!.thread_id))
-//                        {
-                            _alert.postValue(Pair(select, msg))
-//                        }
+                        _alert.postValue(Triple(select, msg, cmd))
                     }
                 }
-                1    ->
+                1    -> // Snack alert dialogs
                 {
-                    l.d("MVM:: ALERT HELPER SELECTION 1: $select")
+                    _alert.postValue(Triple(select, msg, cmd))
+                }
+                2    -> // Input number alert dialog
+                {
+                    _alert.postValue(Triple(select, msg, cmd))
+                }
+                3    -> // Toast alert dialogs
+                {
+                    _alert.postValue(Triple(select, msg, cmd))
                 }
                 else ->
                 {
-                    _alert.postValue(Pair(select, msg))
+                    _alert.postValue(Triple(select, msg, cmd))
                     l.d("MVM:: ALERT HELPER SELECTION ELSE: $select")
                 }
             }
@@ -286,6 +295,78 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
         {
             0 -> getAllThreads() // 0 = refresh the threads
             1 -> getAllMessages()
+        }
+    }
+
+    /**
+     * UPDATE SMS
+     */
+    fun updateSmsMessage()
+    {
+        viewModelScope.launch(Dispatchers.Default) {
+            if (smsRep.update(draftSms))
+            {
+                // Inform that message was updated
+//                alertHelper(1, "Message was updated.", null)
+                l.d("MVM:: UPDATE SMS SUCCESS!")
+                for ((con, m) in sqlMessages.withIndex())
+                {
+                    if (m.id == draftSms.id)
+                    {
+                        l.d("MVM:: UPDATED SMS AT: $con : ${sqlMessages[con].read}")
+                        sqlMessages[con] = draftSms
+                        _messages.postValue(sqlMessages)
+                        break
+                    }
+                }
+                for ((con, m) in sqlThreads.withIndex())
+                {
+                    if (m.thread_id == draftSms.thread_id)
+                    {
+                        l.d("MVM:: UPDATED SMS THREAD AT: $con : ${sqlThreads[con].read}")
+                        sqlThreads[con].read = 1
+                        _threads.postValue(sqlThreads)
+                        break
+                    }
+                }
+            }
+            else
+            {
+                // Inform that message didn't update
+//                alertHelper(1, "Message update FAILED! Is app set as default?", null)
+                l.d("MVM:: UPDATE SMS FAILED!")
+            }
+        }
+    }
+
+    /**
+     * DELETE SMS
+     */
+    fun deleteSmsMessage()
+    {
+        viewModelScope.launch(Dispatchers.Default) {
+            if (smsRep.delete(draftSms))
+            {
+                // Inform that message was deleted
+                alertHelper(1, "Message was deleted.", null)
+
+                for ((con, m) in sqlMessages.withIndex())
+                {
+                    if (m.id == draftSms.id)
+                    {
+                        l.d("MVM:: DELETE SMS AT: $con")
+                        sqlMessages.removeAt(con)
+                        _messages.postValue(sqlMessages)
+                        refresh(0) // Update the threads
+                        break
+                    }
+                }
+            }
+            else
+            {
+                // Inform that message didn't deleted
+                alertHelper(1, "Message delete FAILED! Is app set as default?", null)
+            }
         }
     }
 
@@ -327,13 +408,16 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
 
                 // Add correct msg
                 draftSms.body = msg
+
                 // Add to end of list
                 data.add(data.lastIndex + 1, draftSms)
 
                 // Add to local list
                 sqlMessages.add(data.lastIndex, draftSms)
-                // Populate messages live data to refresh recycler
+
+                // Populate messages and thread live data to refresh recycler
                 _messages.postValue(data)
+                _threads.postValue(sqlThreads)
             }
         }
     }
@@ -401,52 +485,90 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
                         tempSms?.address
                     )
                 )
-            ).let {
-                if (it != null)
-                {
-                    data.addAll(it)
-                }
+            )?.let {
+                data.addAll(it)
+                buildMessage(data)
             }
+        }
+    }
 
+    /**
+     * MESSAGE BUILDER
+     */
+    private suspend fun buildMessage(
+        data: ArrayList<Sms.AppSmsShort>
+    )
+    {
+        // Check if there are any values
+        if (data.size > 0)
+        {
             // shallow copy and local storage of threads
             sqlMessages.clear()
             data.map { sqlMessages.add(it.copy()) }
 
-            // TODO:: The last has been changed for testing, should be 'it'
+            // TODO:: The last has been changed for testing, should be 'it'.
+            // TODO:: 'it' is the marker for last message checked, set to scan
+            // TODO:: all messages currently.
             val msg = _contactKeysMap[data[0].thread_id]?.last_check?.let {
                 KeyHelper().keyMessageFinder(
                     data,
-                    1L)
+                    1L) //TODO:: right here, got it!
             }
 
             val contact: KeyContent.AppKey
-            if (msg?.id != -1)
+
+            // If -1 id, means no message with key found
+            if (msg?.id != -1 && msg != null)
             {
-                msg?.let { smsShort ->
+                msg.let { smsShort ->
                     contact = KeyHelper().buildContactKey(
                         KeyHelper().trimMessageAndGenerateKey(smsShort),
                         smsShort,
                         _contactKeysMap
                     )
 
-                    if(updateContactsKey(contact))
+                    if (updateContactsKey(contact))
                     {
                         _contactKeysSecMap[contact.thread_id] =
-                                contact.publicKey?.let { CryptoHelper().generateSecret(it,
-                                    keyAgree) }
+                                contact.publicKey?.let {
+                                    CryptoHelper().generateSecret(
+                                        it,
+                                        keyAgree)
+                                }
                     }
                     else
                     {
                         l.e("MVM:: UPDATE OF CONTACT KEY FAILED")
                     }
                 }
+                alertHelper(
+                    1,
+                    "Key found in message: ${msg.let { data.indexOf(it) }}",
+                    null)
+            }
+            else
+            {
+                // Inform of previous invite but no saved key
+                if (checkInviteSent(tempSms!!.thread_id)
+                    && !checkForEncryptionKey(tempSms!!.thread_id))
+                {
+                    alertHelper(
+                        1,
+                        "Invite previously sent. No keys received yet.",
+                        null)
+                }
             }
 
             // Decrypt the messages and post to live data
             _messages.postValue(
-                if (encSwitch.value!!){ CryptoHelper().deLoop(data, _contactKeysSecMap)}
-                else{ data })
-//            _messages.postValue(data)
+                if (encSwitch.value!!)
+                {
+                    CryptoHelper().deLoop(data, _contactKeysSecMap)
+                }
+                else
+                {
+                    data
+                })
         }
     }
 
@@ -456,6 +578,9 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
     fun cleanUpMessages()
     {
         _messages.value?.clear()
+        sqlMessages.clear()
+        tempSms = Sms.AppSmsShort()
+        draftSms = Sms.AppSmsShort()
     }
 
     /**
@@ -520,11 +645,14 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
      */
     fun findThreadId()
     {
+        val data = ArrayList<Sms.AppSmsShort>()
+
         viewModelScope.launch(Dispatchers.IO) {
 
-            tempSms?.thread_id = tempSms?.address?.let { smsRep.find(it) }!!
-
-            getAllMessages()
+            tempSms?.address?.let { smsRep.find(it) }!!.let {
+                data.addAll(it)
+                buildMessage(data)
+            }
         }
     }
 

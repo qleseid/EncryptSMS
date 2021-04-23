@@ -153,6 +153,8 @@ class ThreadFragment : Fragment() {
         {
             // SMS thread list comes in with newest at the end, this reverses it so it's first
             val msg = getItem(itemCount - (position + 1))
+
+            // TODO:: Fix this to use phone contact provider for names
             holder.idView.text = PhoneNumberUtils.formatNumber(msg.address)
             holder.snipView.text = msg.body
             holder.dateView.text = SimpleDateFormat("EEE MMM/dd/yy", Locale.getDefault()).format(msg.date)

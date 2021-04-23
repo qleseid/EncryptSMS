@@ -50,7 +50,6 @@ class SmsRepository(
      * @return data: ArrayList<Sms.AppSmsShort>
      */
     suspend fun getAllThreads(
-
     ): ArrayList<Sms.AppSmsShort>?
     {
         val data = ArrayList<Sms.AppSmsShort>()
@@ -88,18 +87,23 @@ class SmsRepository(
      * FIND SMS
      *
      * @param address: String
-     * @return result: Long
+     * @return result: ArrayList<Sms.AppSmsShort>?
      */
     suspend fun find(
         address: String
-    ): Long
+    ): ArrayList<Sms.AppSmsShort>?
     {
-        var result: Long
+        val data = ArrayList<Sms.AppSmsShort>()
         withContext(Dispatchers.IO){
-            smsDoa.find(address).let { result = it }
+            smsDoa.find(address).let {
+                if (it != null)
+                {
+                    data.addAll(it)
+                }
+            }
         }
         l.d("SR:: FIND")
-        return result
+        return data
     }
 
     /**

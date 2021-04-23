@@ -8,21 +8,24 @@ import android.telephony.SmsMessage
 import com.lolson.encryptsms.data.livedata.ReceiveNewSms
 import com.lolson.encryptsms.data.manager.SmsManager
 import com.lolson.encryptsms.utility.LogMe
+import com.lolson.encryptsms.utility.NotificationUtils
 
 class SmsReceiver: BroadcastReceiver()
 {
     //Logger
-    var l = LogMe()
+    private var l = LogMe()
 
-    // Bundle string
-    val SMS_BUNDLE = "pdus"
+    // Notification
+    private lateinit var mNotify: NotificationUtils
 
     override fun onReceive(
         context: Context?,
         intent: Intent?
     ) {
         //TODO: Finish adding where the received will go.
-        l.d("SR:: ON RECEIVE: ${context.toString()}")
+        l.d("SBR:: ON RECEIVE: ${context.toString()}")
+
+        mNotify = context?.let { NotificationUtils(it) }!!
 
         Telephony.Sms.Intents.getMessagesFromIntent(intent)?.let {
             val subId = intent?.extras?.getInt("subscription", -1) ?: -1
@@ -31,7 +34,7 @@ class SmsReceiver: BroadcastReceiver()
 
             val thread = Thread{
                 run {
-                    l.d("SR:: Receive Thread")
+                    l.d("SBR:: Receive Thread")
                     receiveSms(subId, it, context)
                     pendingResult.resultCode = 1
                     pendingResult.finish()
@@ -53,7 +56,9 @@ class SmsReceiver: BroadcastReceiver()
             val smsM = context?.let { SmsManager(it) }
             if (smsM!!.insertRecSms(subId, add, body, time))
             {
-                l.d("SR:: INSERT SUCCESS")
+                l.d("SBR:: INSERT SUCCESS")
+                val nb = mNotify.getAndroidNotifyChannel(add,body)
+                mNotify.getManager().notify(101, nb.build())
                 ReceiveNewSms.set(true)
             }
         }
