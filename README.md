@@ -36,9 +36,9 @@ This project is changing constantly, **USE AT YOUR OWN RISK!**
 Current: **2.2v**
 
 Top needs:
-An intro that details what's missing from a normal SMS app.
-MMS support; lots of work!
-Contact names to replace the numbers
+* An intro that details what's missing from a normal SMS app.
+* MMS support; lots of work!
+* Contact names to replace the numbers
 
 # Legal
 
