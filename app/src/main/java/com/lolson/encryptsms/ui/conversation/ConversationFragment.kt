@@ -22,7 +22,6 @@ import com.lolson.encryptsms.data.livedata.ReceiveNewSms
 import com.lolson.encryptsms.data.model.Phone
 import com.lolson.encryptsms.data.model.Sms
 import com.lolson.encryptsms.databinding.ActivityConversationDetailBinding
-import com.lolson.encryptsms.ui.threads.ThreadFragment
 import com.lolson.encryptsms.utility.LogMe
 import com.lolson.encryptsms.utility.widget.TightTextView
 import java.text.SimpleDateFormat
@@ -277,7 +276,7 @@ class ConversationFragment : Fragment() {
     inner class SimpleConvoRecyclerViewAdapter(
         private val parentActivity: ConversationFragment
     ) :
-        ListAdapter<Sms.AppSmsShort, SimpleConvoRecyclerViewAdapter.ViewHolder>(ThreadFragment.ItemDiffCallback())
+        ListAdapter<Sms.AppSmsShort, SimpleConvoRecyclerViewAdapter.ViewHolder>(ItemDiffCallback())
     {
         private val onLongClickListener: View.OnLongClickListener
 
