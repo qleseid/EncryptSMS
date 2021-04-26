@@ -62,6 +62,7 @@ class NotificationUtils(_context: Context): ContextWrapper(_context)
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
         intent.putExtra("address", title)
+        intent.putExtra("offset", 800L)
 
         val pIntent = PendingIntent.getActivity(
             this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT

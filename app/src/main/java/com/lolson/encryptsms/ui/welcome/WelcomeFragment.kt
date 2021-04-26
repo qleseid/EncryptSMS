@@ -39,6 +39,7 @@ class WelcomeFragment : Fragment()
         _binding = FragmentWelcomeBinding.inflate(inflater, container, false)
 
         binding.progressBar.animate()
+        // Hides top status bar for fullscreen
         activity?.window?.setFlags(1024, 1024)
 
         // Inflate the layout for this fragment
@@ -67,7 +68,7 @@ class WelcomeFragment : Fragment()
         super.onResume()
         l.d("WF:: ON RESUME")
 
-        // Clean exit from the app after 2 backs
+        // Clean exit from the app after 2 backs or ups
         when (firstLaunch)
         {
             0 ->
