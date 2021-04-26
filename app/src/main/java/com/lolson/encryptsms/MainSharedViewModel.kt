@@ -120,17 +120,6 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
     init
     {
         viewModelScope.launch(Dispatchers.Default) {
-
-//            l.d("MVM:: KEY PROVIDERS: ${Security.getProviders().asList()}")
-//            Security.getProviders().forEach {
-//
-//                l.d("MVM:: KEY PROVIDER: ${it.info} Services: ${it.services}")
-//            }
-//            l.d("MVM:: KEY ALGORITHM: ${Security.getAlgorithms("keyagreement").toList()}")
-//            l.d("MVM:: KEY ALGORITHM: ${Security.getAlgorithms("keypairgenerator").toList()}")
-//
-//            l.d("MVM:: GET PROVIDER: ${KeyPairGenerator.getInstance("EC", "BC")
-//                .provider}")
             // Get DH Keys
             getDhKeys()
 
@@ -314,8 +303,16 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
                     if (m.id == draftSms.id)
                     {
                         l.d("MVM:: UPDATED SMS AT: $con : ${sqlMessages[con].read}")
-                        sqlMessages[con] = draftSms
-                        _messages.postValue(sqlMessages)
+                        sqlMessages[con].read = 1
+                        _messages.postValue(
+                            if (encSwitch.value!!)
+                            {
+                                CryptoHelper().deLoop(sqlMessages, _contactKeysSecMap)
+                            }
+                            else
+                            {
+                                sqlMessages
+                            })
                         break
                     }
                 }
@@ -475,8 +472,6 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
      */
     fun getAllMessages()
     {
-        val data = ArrayList<Sms.AppSmsShort>()
-
         viewModelScope.launch(Dispatchers.IO) {
             smsRep.getAllMessages(
                 arrayListOf(
@@ -486,8 +481,7 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
                     )
                 )
             )?.let {
-                data.addAll(it)
-                buildMessage(data)
+                buildMessage(it)
             }
         }
     }
@@ -505,6 +499,9 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
             // shallow copy and local storage of threads
             sqlMessages.clear()
             data.map { sqlMessages.add(it.copy()) }
+
+            // Set thread_id from these messages so encryption works
+            tempSms?.thread_id = data[0].thread_id
 
             // TODO:: The last has been changed for testing, should be 'it'.
             // TODO:: 'it' is the marker for last message checked, set to scan
@@ -645,13 +642,9 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
      */
     fun findThreadId()
     {
-        val data = ArrayList<Sms.AppSmsShort>()
-
         viewModelScope.launch(Dispatchers.IO) {
-
-            tempSms?.address?.let { smsRep.find(it) }!!.let {
-                data.addAll(it)
-                buildMessage(data)
+            tempSms?.address?.let { smsRep.find(it) }!!.run {
+                buildMessage(this)
             }
         }
     }

@@ -18,6 +18,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SwitchCompat
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.view.get
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.navigation.NavController
 import androidx.navigation.findNavController
@@ -48,6 +49,7 @@ open class MainActivity : AppCompatActivity()
 
     //Intent extra strings
     private val appBarSetting: String = "Settings clicked"
+    private var offset = 0L
 
     //Logger
     private var l = LogMe()
@@ -69,6 +71,12 @@ open class MainActivity : AppCompatActivity()
         super.onCreate(savedInstanceState)
         saveState = savedInstanceState
         l.d("MA:: ON CREATE")
+
+        // Get startup offset if it's there, comes from notifications
+        intent.extras?.getLong("offset")?.let {
+            // Offset for faster startup when started from a notification intent
+            offset = it
+        }
 
         //Inflate all views and bind to variable
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -250,6 +258,7 @@ open class MainActivity : AppCompatActivity()
      */
     private fun defaultApp()
     {
+        // Check if app is default and launch chooser depending on sdk
         if (Telephony.Sms.getDefaultSmsPackage(this) != this.packageName)
         {
             LogMe().i("MA:: DEFAULT APP CHECK")
@@ -276,9 +285,14 @@ open class MainActivity : AppCompatActivity()
         }
     }
 
+    /**
+     * ON ACTIVITY RESULT
+     * Receives call from startActivityForResult()
+     */
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?)
     {
         super.onActivityResult(requestCode, resultCode, data)
+        // Matches to this apps specific code from default app function
         if (requestCode == 4216 || requestCode == 4217)
 //            if (requestCode.toString() == "4216")
         {
@@ -302,12 +316,16 @@ open class MainActivity : AppCompatActivity()
             sharedViewModel.getAllThreads()
         }
 
+        // Currently this is how a notification intent is handled
+        // The notification launches the app and it goes to threads first
+        // Then it moves to the convo if there's an address in the intent.
+        // This was done to create a clean back/up click from the convo
         // Create splash delay
         Handler(Looper.getMainLooper()).postDelayed({
             navController.navigate(R.id.nav_threads)
             // Show app bar after startup
             supportActionBar?.show()
-        }, 850)
+        }, 850 - offset)
 
         // Allow app to start normal and then move to Conversation
         Handler(Looper.getMainLooper()).postDelayed({
@@ -318,7 +336,7 @@ open class MainActivity : AppCompatActivity()
             }
             navController.navigate(R.id.nav_conversations, bundle)
         }
-        }, 990)
+        }, 990 - offset)
     }
 
     /**

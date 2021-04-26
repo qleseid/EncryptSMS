@@ -234,7 +234,7 @@ class AlertDialogs(_context: Context, _viewModel: MainSharedViewModel, _findView
     }
 
     /**
-     * ALERT POP DIALOG BOX FOR INVITE ACTION
+     * ALERT POP DIALOG BOX FOR APP NOT DEFAULT ACTION
      */
     private fun appNotDefault()
     {

@@ -18,7 +18,7 @@ an apk to load on Android will be published here.
 
 [![Ask Me Anything !](https://img.shields.io/badge/Ask%20me-anything-1abc9c.svg)](https://GitHub.com/Naereen/ama)
 
-This project is interesting idea that I'm chasing down. It would be foolish to assume my ideas are perfect and implemented to perfection. Any and all feedback is welcome, just remember, make it clear and concise.
+This project is an interesting idea that I'm chasing down. It would be foolish to assume my ideas are perfect and implemented to perfection. Any and all feedback is welcome, just remember, make it clear and concise.
 
 ### Documentation
 
