@@ -34,6 +34,7 @@ class SmsHelper
     ):ArrayList<Sms.AppSmsShort>
     {
         val data = ArrayList<Sms.AppSmsShort>()
+        var found = false
 
         // Creates shallow copy of objects
         threads.map { data.add(it.copy()) }
@@ -53,9 +54,18 @@ class SmsHelper
                 // Insert adds to end, so original should be at the same spot
                 data.removeAt(con)
 
+                found = true
+
                 l.d("SH:: SMS THREAD UPDATE: $con")
                 break
             }
+        }
+
+        // If no thread_id is found, means new contact
+        if (!found)
+        {
+            // Insert at the top, which is at the end!?
+            data.add(sms)
         }
         return ArrayList(data)
     }

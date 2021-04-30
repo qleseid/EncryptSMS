@@ -11,10 +11,13 @@
       <w>encryptsms</w>
       <w>interactor</w>
       <w>lolson</w>
+      <w>mmsto</w>
       <w>msgs</w>
       <w>privatekey</w>
       <w>publickey</w>
+      <w>sentsms</w>
       <w>smsm</w>
+      <w>smsto</w>
       <w>sqlite</w>
       <w>succ</w>
     </words>

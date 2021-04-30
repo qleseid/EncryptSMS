@@ -2,7 +2,6 @@ package com.lolson.encryptsms.utility
 
 import android.content.Context
 import android.graphics.Color
-import android.telephony.PhoneNumberUtils
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.Gravity
@@ -64,6 +63,11 @@ class AlertDialogs(_context: Context, _viewModel: MainSharedViewModel, _findView
             {
                 toastMessages(message)
                 mVM.alertHelper(-33, message, command)
+            }
+            4 ->
+            {
+                appShortComings()
+                mVM.alertHelper(-44, message, command)
             }
             else -> { }
         }
@@ -162,7 +166,6 @@ class AlertDialogs(_context: Context, _viewModel: MainSharedViewModel, _findView
             if (Phone.pho().isCellPhoneNumber(input.text.toString())!!)
             {
                 l.d("AD:: DIALOG BOX OK: GOOD NUMBER")
-                mVM.setTitle(PhoneNumberUtils.formatNumber(input.text.toString()))
                 mVM.tempSms = Sms.AppSmsShort()
                 mVM.tempSms!!.address = input.text.toString()
                 mVM.findThreadId()
@@ -236,14 +239,18 @@ class AlertDialogs(_context: Context, _viewModel: MainSharedViewModel, _findView
     /**
      * ALERT POP DIALOG BOX FOR APP NOT DEFAULT ACTION
      */
-    private fun appNotDefault()
+    private fun appShortComings()
     {
         val alert = AlertDialog.Builder(mContext)
-            .setTitle("App not default")
-            .setMessage("Some functionality is limited when not default.\n\n" +
-                    "Set app as default?")
-            .setPositiveButton("Pick Default"){ dialog, _ ->
-                mVM.sendSmsInviteMessage()
+            .setTitle("Under Development")
+            .setMessage("2.5v missing functionality: \n\n" +
+                    "- No MMS support yet\n" +
+                    "- Settings are hardcoded\n" +
+                    "- No themes yet\n" +
+                    "- Non-default has limited functionality\n" +
+                    "- Notifications don't wake device")
+            .setPositiveButton("Don't Show Again"){ dialog, _ ->
+                mVM.sharePref.edit().putInt("Alert_Short_Coming", 1).apply()
                 dialog.cancel()
             }
             .setNegativeButton("Cancel") { dialog, _ ->

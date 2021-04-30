@@ -12,14 +12,12 @@ import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.findNavController
-import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.lolson.encryptsms.MainSharedViewModel
 import com.lolson.encryptsms.R
-import com.lolson.encryptsms.R.id
 import com.lolson.encryptsms.data.model.Sms
 import com.lolson.encryptsms.databinding.FragmentThreadsBinding
 import com.lolson.encryptsms.ui.conversation.ConversationFragment
@@ -55,6 +53,7 @@ class ThreadFragment : Fragment() {
             // Nav to Conversation Fragment and adds in a blank SMS as arg
             val bundle = Bundle().apply {
                 putSerializable(ConversationFragment.ARG_ITEM_ID, Sms.AppSmsShort())
+                putSerializable("name", "Enter # Here")
             }
             requireActivity().findNavController(R.id.nav_host_fragment).navigate(R.id
                 .nav_conversations, bundle)
@@ -112,13 +111,11 @@ class ThreadFragment : Fragment() {
     private fun setupRecyclerView(
         recyclerView: RecyclerView
     ) {
-        adapter = SimpleItemRecyclerViewAdapter(this)
+        adapter = SimpleItemRecyclerViewAdapter()
         recyclerView.adapter = adapter
     }
 
-    class SimpleItemRecyclerViewAdapter(
-        private val parentActivity: ThreadFragment
-    ) :
+    inner class SimpleItemRecyclerViewAdapter :
         ListAdapter<Sms.AppSmsShort, SimpleItemRecyclerViewAdapter.ViewHolder>(ItemDiffCallback())
     {
 
@@ -128,13 +125,15 @@ class ThreadFragment : Fragment() {
         init
         {
             onClickListener = View.OnClickListener { v ->
-                val msg = v.tag as Sms.AppSmsShort
+                val msg = v.getTag(R.id.message) as Sms.AppSmsShort
+                val name = v.getTag(R.id.title) as String
 
                 // Nav to Conversation Fragment and adds in the selected thread as arg
                 val bundle = Bundle().apply {
-                        putSerializable(ConversationFragment.ARG_ITEM_ID, msg)
+                    putSerializable(ConversationFragment.ARG_ITEM_ID, msg)
+                    putSerializable("name", name)
                 }
-                parentActivity.findNavController().navigate(id.nav_conversations, bundle)
+                requireActivity().findNavController(R.id.nav_host_fragment).navigate(R.id.nav_conversations, bundle)
             }
         }
 
@@ -154,22 +153,30 @@ class ThreadFragment : Fragment() {
             // SMS thread list comes in with newest at the end, this reverses it so it's first
             val msg = getItem(itemCount - (position + 1))
 
-            // TODO:: Fix this to use phone contact provider for names
-            holder.idView.text = PhoneNumberUtils.formatNumber(msg.address)
+            val contact = threadsSharedViewModel.getContact(msg.thread_id)
+            if (contact != null)
+            {
+                holder.idView.text = contact
+            }
+            else
+            {
+                holder.idView.text = PhoneNumberUtils.formatNumber(msg.address)
+            }
+
             holder.snipView.text = msg.body
             holder.dateView.text = SimpleDateFormat("EEE MMM/dd/yy", Locale.getDefault()).format(msg.date)
 
             //Set the icons for user selection. Names come from assets folder and actual
             // drawables are in res/drawable
             //It was the only solution I could find at the moment
-            val res = parentActivity.resources
+            val res = resources
             holder.icView.setImageDrawable(
                 ResourcesCompat.getDrawable(
                 res,
                 res.getIdentifier(
                     "ic_message_black_24dp",
                     "drawable",
-                    parentActivity.activity?.packageName),
+                    activity?.packageName),
                 null))
 
             //Sets the background color if selected
@@ -197,21 +204,22 @@ class ThreadFragment : Fragment() {
 
             with(holder.itemView)
             {
-                tag = msg
+                setTag(R.id.message, msg)
+                setTag(R.id.title, holder.idView.text)
                 setOnClickListener(onClickListener)
             }
         }
 
-        class ViewHolder(
+        inner class ViewHolder(
             view: View
         ) : RecyclerView.ViewHolder(view)
         {
-            val idView: TextView = view.findViewById(id.title)
-            val snipView: TextView = view.findViewById(id.snippet)
-            val dateView: TextView = view.findViewById(id.date)
-            val icView: ImageView = view.findViewById(id.conver_list_icon)
-            val readView: ImageView = view.findViewById(id.unread)
-            val numUnreadView: TextView = view.findViewById(id.number_of_unread)
+            val idView: TextView = view.findViewById(R.id.title)
+            val snipView: TextView = view.findViewById(R.id.snippet)
+            val dateView: TextView = view.findViewById(R.id.date)
+            val icView: ImageView = view.findViewById(R.id.conver_list_icon)
+            val readView: ImageView = view.findViewById(R.id.unread)
+            val numUnreadView: TextView = view.findViewById(R.id.number_of_unread)
         }
     }
 

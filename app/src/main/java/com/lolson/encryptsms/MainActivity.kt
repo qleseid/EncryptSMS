@@ -314,6 +314,11 @@ open class MainActivity : AppCompatActivity()
         if (saveState?.isEmpty == null)
         {
             sharedViewModel.getAllThreads()
+
+            if (sharedViewModel.sharePref.getInt("Alert_Short_Coming", 0) != 1)
+            {
+                sharedViewModel.alertHelper(4, null, null)
+            }
         }
 
         // Currently this is how a notification intent is handled
@@ -329,13 +334,42 @@ open class MainActivity : AppCompatActivity()
 
         // Allow app to start normal and then move to Conversation
         Handler(Looper.getMainLooper()).postDelayed({
-        intent.extras?.getString("address")?.let {
-            // Nav to Conversation Fragment and adds in the selected thread as arg
-            val bundle = Bundle().apply {
-                putSerializable("notify", it)
+
+            // TODO:: testing the SMSTO receiver
+            if (intent.data?.scheme.equals("smsto"))
+            {
+                val num = intent.data?.schemeSpecificPart
+                val mssg = intent.extras?.getString("sms_body")
+                LogMe().i("MA:: SMSTO: $num == $mssg")
+
+                // Nav to Conversation Fragment and adds in the selected thread as arg
+                val bundle = Bundle().apply {
+                    putSerializable("notify", num)
+                }
+                navController.navigate(R.id.nav_conversations, bundle)
             }
-            navController.navigate(R.id.nav_conversations, bundle)
-        }
+
+            // TODO:: check for function in older than 11 SDK
+            if (intent.data?.scheme.equals("sms"))
+            {
+                val num = intent.data?.schemeSpecificPart
+                val mssg = intent.extras?.getString("sms_body")
+                LogMe().i("MA:: SMS: $num == $mssg")
+
+                // Nav to Conversation Fragment and adds in the selected thread as arg
+                val bundle = Bundle().apply {
+                    putSerializable("notify", num)
+                }
+                navController.navigate(R.id.nav_conversations, bundle)
+            }
+
+//        intent.extras?.getString("address")?.let {
+//            // Nav to Conversation Fragment and adds in the selected thread as arg
+//            val bundle = Bundle().apply {
+//                putSerializable("notify", it)
+//            }
+//            navController.navigate(R.id.nav_conversations, bundle)
+//        }
         }, 990 - offset)
     }
 
@@ -347,6 +381,10 @@ open class MainActivity : AppCompatActivity()
         if (ContextCompat.checkSelfPermission(
                 this,
                 Manifest.permission.READ_SMS
+            ) ==  PackageManager.PERMISSION_GRANTED &&
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.READ_CONTACTS
             ) ==  PackageManager.PERMISSION_GRANTED)
         {
             LogMe().i("MA:: CHECK PERMISSION: APP LAUNCH")
@@ -355,7 +393,8 @@ open class MainActivity : AppCompatActivity()
         else
         {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
-                if(shouldShowRequestPermissionRationale(Manifest.permission.READ_SMS))
+                if(shouldShowRequestPermissionRationale(Manifest.permission.READ_SMS) ||
+                    shouldShowRequestPermissionRationale(Manifest.permission.READ_CONTACTS))
                 {
                     // TODO:: Create a rationale page to explain stuff
                     LogMe().i("MA:: CHECK PERMISSION SHOW RATIONALE")
@@ -381,7 +420,6 @@ open class MainActivity : AppCompatActivity()
             ActivityCompat.requestPermissions(
                 it, arrayOf(
                     Manifest.permission.READ_SMS,
-                    Manifest.permission.SEND_SMS,
                     Manifest.permission.READ_CONTACTS), 0)
         }
     }
@@ -398,17 +436,18 @@ open class MainActivity : AppCompatActivity()
             0    ->
             {
                 if (grantResults.isNotEmpty() &&
-                    grantResults[0] == PackageManager.PERMISSION_GRANTED)
+                    grantResults[0] == PackageManager.PERMISSION_GRANTED &&
+                    grantResults[1] == PackageManager.PERMISSION_GRANTED)
                 {
                     super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-                    Toast.makeText(this, "Read SMS permission granted", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this, "SMS permissions granted", Toast.LENGTH_LONG).show()
 
                     // Start the app on its way after getting permission
                     appLaunch()
                 }
                 else
                 {
-                    Toast.makeText(this, "Need Read SMS permission! Change in Phone Settings", Toast
+                    Toast.makeText(this, "Need SMS permission! Change in Phone Settings", Toast
                         .LENGTH_LONG).show()
 //                    exitProcess(7)
                 }

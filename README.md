@@ -22,7 +22,7 @@ This project is an interesting idea that I'm chasing down. It would be foolish t
 
 ### Documentation
 
-![Doc version](https://img.shields.io/badge/doc.odt-v1.14-blueviolet)
+![Doc version](https://img.shields.io/badge/doc.odt-v1.16-blueviolet)
 
 
 The <span style="color:blue">**docs**</span> folder contains the running project document. It will be updated weekly.
@@ -33,12 +33,13 @@ The <span style="color:blue">**docs**</span> folder contains the running project
 
 This project is changing constantly, **USE AT YOUR OWN RISK!**
 
-Current: **2.2v**
+Current: **2.5v**
 
 Top needs:
-* An intro that details what's missing from a normal SMS app.
 * MMS support; lots of work!
-* Contact names to replace the numbers
+* Settings to control features
+* Local database instead of always pulling from providers
+* Themes
 
 # Legal
 

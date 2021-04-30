@@ -1,9 +1,7 @@
 package com.lolson.encryptsms
 
-import com.lolson.encryptsms.data.model.KeyTest
-import com.lolson.encryptsms.data.model.PhoneTest
-import com.lolson.encryptsms.data.model.SecretTest
-import com.lolson.encryptsms.data.model.SmsTest
+import com.lolson.encryptsms.data.model.*
+import com.lolson.encryptsms.utility.CryptoMagicTest
 import org.junit.runner.RunWith
 import org.junit.runners.Suite
 
@@ -12,8 +10,10 @@ import org.junit.runners.Suite
     KeyTest::class,
     SecretTest::class,
     PhoneTest::class,
-    SmsTest::class
-//    MainSharedViewModelTest::class
+    SmsHelperTest::class,
+    CryptoMagicTest::class,
+    SmsTest::class,
+    MainSharedViewModelTest::class
 
 )
 class TestUnitSuite

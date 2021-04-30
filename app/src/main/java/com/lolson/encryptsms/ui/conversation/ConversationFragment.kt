@@ -22,17 +22,15 @@ import com.lolson.encryptsms.data.livedata.ReceiveNewSms
 import com.lolson.encryptsms.data.model.Phone
 import com.lolson.encryptsms.data.model.Sms
 import com.lolson.encryptsms.databinding.ActivityConversationDetailBinding
+import com.lolson.encryptsms.ui.threads.ThreadFragment
 import com.lolson.encryptsms.utility.LogMe
 import com.lolson.encryptsms.utility.widget.TightTextView
 import java.text.SimpleDateFormat
 import java.util.*
 
 @Suppress("DEPRECATION")
-class ConversationFragment : Fragment() {
-    /**
-     * The conversation of a new message or selected conversation.
-     */
-
+class ConversationFragment : Fragment()
+{
     // Binding view
     private var _binding: ActivityConversationDetailBinding? = null
     private val binding get() = _binding!!
@@ -62,6 +60,10 @@ class ConversationFragment : Fragment() {
                 if (it.containsKey(ARG_ITEM_ID))
                 {
                     val tThread = it.getSerializable(ARG_ITEM_ID) as Sms.AppSmsShort
+                    val name = it.getSerializable("name") as String
+
+                    convoSharedViewModel.setTitle(name)
+
                     l.d(
                         "CF:: ON CREATE ARGS: ${tThread.thread_id} #:#" +
                                 " ${savedInstanceState?.isEmpty}")
@@ -124,13 +126,13 @@ class ConversationFragment : Fragment() {
         activity?.findViewById<FloatingActionButton>(R.id.fab)?.hide()
 
         // Show the address content as the title text in a TextView.
-        convoSharedViewModel.tempSms.let {
-            if (it != null)
-            {
-                // TODO:: Fix to use contact name from phone contact provider
-                convoSharedViewModel.setTitle(PhoneNumberUtils.formatNumber(it.address))
-            }
-        }
+//        convoSharedViewModel.tempSms.let {
+//            if (it != null)
+//            {
+//                // TODO:: Fix to use contact name from phone contact provider
+//                convoSharedViewModel.setTitle(PhoneNumberUtils.formatNumber(it.address))
+//            }
+//        }
 
         // Shows alert box to input a number
         activity?.findViewById<Toolbar>(R.id.toolbar)?.setOnClickListener{
@@ -210,6 +212,22 @@ class ConversationFragment : Fragment() {
                     recyclerView.scrollToPosition(adapter.itemCount - 1)
                 }
             })
+
+            if (it?.size!! > 0)
+            {
+                it[0].let { it1 ->
+                    val contact = convoSharedViewModel.getContact(it1.thread_id)
+
+                    if (contact != null)
+                    {
+                        convoSharedViewModel.setTitle(contact)
+                    }
+                    else
+                    {
+                        convoSharedViewModel.setTitle(PhoneNumberUtils.formatNumber(it1.address))
+                    }
+                }
+            }
         })
 
         setupRecyclerView(recyclerView)
@@ -276,7 +294,7 @@ class ConversationFragment : Fragment() {
     inner class SimpleConvoRecyclerViewAdapter(
         private val parentActivity: ConversationFragment
     ) :
-        ListAdapter<Sms.AppSmsShort, SimpleConvoRecyclerViewAdapter.ViewHolder>(ItemDiffCallback())
+        ListAdapter<Sms.AppSmsShort, SimpleConvoRecyclerViewAdapter.ViewHolder>(ThreadFragment.ItemDiffCallback())
     {
         private val onLongClickListener: View.OnLongClickListener
 
@@ -342,7 +360,7 @@ class ConversationFragment : Fragment() {
 //            l.d("CF:: ON BIND VIEW HOLDER POSITION: $position")
 
             val msg = getItem(position)
-            val c = parentActivity.context
+            val c = context
 
 //            holder.idView.text = PhoneNumberUtils.formatNumber(msg.address)
             holder.attachView.isVisible = false
@@ -394,11 +412,17 @@ class ConversationFragment : Fragment() {
                 0 -> {
                     holder.statusView.text = c?.getString(R.string.status_sent)
                 }
+                1 -> {
+                    holder.statusView.text = getString(R.string.concer_fragment_delivered)
+                }
                 32 -> {
                     holder.statusView.text = c?.getString(R.string.status_pending)
                 }
                 64 -> {
                     holder.statusView.text = c?.getString(R.string.status_failed)
+                }
+                65 -> {
+                    holder.statusView.text = getString(R.string.conver_fragment_delivery_error)
                 }
             }
 
@@ -406,8 +430,7 @@ class ConversationFragment : Fragment() {
             if (msg.read == 0)
             {
                 msg.read = 1
-                convoSharedViewModel.draftSms = msg
-                convoSharedViewModel.updateSmsMessage()
+                convoSharedViewModel.updateSmsMessage(msg)
             }
 
             with(holder.itemView) {

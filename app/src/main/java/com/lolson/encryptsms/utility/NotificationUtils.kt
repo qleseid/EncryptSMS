@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
 import android.graphics.Color
+import android.net.Uri
 import android.os.Build
 import com.lolson.encryptsms.MainActivity
 import com.lolson.encryptsms.R
@@ -58,10 +59,12 @@ class NotificationUtils(_context: Context): ContextWrapper(_context)
         body: String
     ):Notification.Builder
     {
-        val intent = Intent(this, MainActivity::class.java ).apply {
+        val uri = Uri.parse("smsto:$title")
+        val intent = Intent(Intent.ACTION_SENDTO, uri, this, MainActivity::class.java ).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+
         }
-        intent.putExtra("address", title)
+//        intent.putExtra("address", title)
         intent.putExtra("offset", 800L)
 
         val pIntent = PendingIntent.getActivity(

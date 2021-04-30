@@ -1,12 +1,15 @@
 package com.lolson.encryptsms
 
 import android.app.Application
+import android.content.Context
+import android.content.SharedPreferences
 import android.util.Base64
 import android.util.Base64.DEFAULT
 import androidx.lifecycle.*
 import com.lolson.encryptsms.contents.KeyContent
 import com.lolson.encryptsms.data.model.Phone
 import com.lolson.encryptsms.data.model.Sms
+import com.lolson.encryptsms.modelviewhelpers.ContactsProviderHelper
 import com.lolson.encryptsms.modelviewhelpers.CryptoHelper
 import com.lolson.encryptsms.modelviewhelpers.KeyHelper
 import com.lolson.encryptsms.modelviewhelpers.SmsHelper
@@ -98,6 +101,9 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
     // Map for contact keys secret by thread_id
     private var _contactKeysSecMap: MutableMap<Long, SecretKeySpec?> = mutableMapOf()
 
+    // Map for contacts name from phone provider
+    private var _contactNameMap: MutableMap<Long, String> = mutableMapOf()
+
     // SMS container for individual conversations
     var tempSms: Sms.AppSmsShort? = null
 
@@ -112,6 +118,9 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
     // Holder variable for all console output
     private var consoleHolder = "MOO COW:\n"
 
+    // Shared Preferences
+    lateinit var sharePref: SharedPreferences
+
     // Repositories
     private val contactKeyRep = ContactsKeyRepository(context)
     private val smsRep = SmsRepository(context)
@@ -120,6 +129,9 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
     init
     {
         viewModelScope.launch(Dispatchers.Default) {
+            // Shared Preferences
+            sharePref = context.getSharedPreferences("encryptsms", Context.MODE_PRIVATE)
+
             // Get DH Keys
             getDhKeys()
 
@@ -263,6 +275,10 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
                 {
                     _alert.postValue(Triple(select, msg, cmd))
                 }
+                4    -> // App Development short coming message
+                {
+                    _alert.postValue(Triple(select, msg, cmd))
+                }
                 else ->
                 {
                     _alert.postValue(Triple(select, msg, cmd))
@@ -290,17 +306,19 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
     /**
      * UPDATE SMS
      */
-    fun updateSmsMessage()
+    fun updateSmsMessage(
+        msg: Sms.AppSmsShort
+    )
     {
         viewModelScope.launch(Dispatchers.Default) {
-            if (smsRep.update(draftSms))
+            if (smsRep.update(msg))
             {
                 // Inform that message was updated
 //                alertHelper(1, "Message was updated.", null)
                 l.d("MVM:: UPDATE SMS SUCCESS!")
                 for ((con, m) in sqlMessages.withIndex())
                 {
-                    if (m.id == draftSms.id)
+                    if (m.id == msg.id)
                     {
                         l.d("MVM:: UPDATED SMS AT: $con : ${sqlMessages[con].read}")
                         sqlMessages[con].read = 1
@@ -318,7 +336,7 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
                 }
                 for ((con, m) in sqlThreads.withIndex())
                 {
-                    if (m.thread_id == draftSms.thread_id)
+                    if (m.thread_id == msg.thread_id)
                     {
                         l.d("MVM:: UPDATED SMS THREAD AT: $con : ${sqlThreads[con].read}")
                         sqlThreads[con].read = 1
@@ -585,54 +603,71 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
      */
     fun getAllThreads()
     {
-        val data = ArrayList<Sms.AppSmsShort>()
-
         // Create a new coroutine to move execution off of UI thread
         viewModelScope.launch(Dispatchers.IO) {
 
-            smsRep.getAllThreads()?.let { data.addAll(it) }
-
-            // shallow copy and local storage of threads
             sqlThreads.clear()
-            data.map { sqlThreads.add(it.copy()) }
+            _contactNameMap.clear()
 
-            viewModelScope.launch(Dispatchers.Default) {
-                var loop = true
-                while (loop)
-                {
-//                    l.d("MVM:: GET ALL THREADS WHILE: $loop")
-                    if (_contactKeysGood.value!!.first)
+            smsRep.getAllThreads()?.let {
+                sqlThreads.addAll(it)
+
+                // Wait for contact's keys to return from database before generating
+                viewModelScope.launch(Dispatchers.Default) {
+                    var loop = true
+                    while (loop)
                     {
-                        if (_contactKeysGood.value!!.second.toInt() != data.size)
+//                    l.d("MVM:: GET ALL THREADS WHILE: $loop")
+                        if (_contactKeysGood.value!!.first)
                         {
-                            l.d(
-                                "MVM:: GET ALL THREADS GEN CONTACTS: " +
-                                        "${_contactKeysGood.value!!} " +
-                                        data.size)
-                            genContacts(data)
+                            if (_contactKeysGood.value!!.second.toInt() != it.size)
+                            {
+                                l.d(
+                                    "MVM:: GET ALL THREADS GEN CONTACTS: " +
+                                            "${_contactKeysGood.value!!} " +
+                                            it.size)
+                                genContacts(it)
+                            }
+                            loop = false
                         }
-                        loop = false
+                        delay(200)
                     }
-                    delay(200)
                 }
-            }
-            // Decrypt the messages and post to live data
-            if (encSwitch.value!! && _contactKeysGood.value!!.first)
-            {
-                _threads.postValue(CryptoHelper().deLoop(data, _contactKeysSecMap))
-            }
-            else
-            {
-                _threads.postValue(data)
-            }
+                // Decrypt the messages and post to live data
+                if (encSwitch.value!! && _contactKeysGood.value!!.first)
+                {
+                    _threads.postValue(CryptoHelper().deLoop(it, _contactKeysSecMap))
+                }
+                else
+                {
+                    _threads.postValue(it)
+                }
 
-            // Some hardware handles IO operations different; data is missed outside of Main
-            viewModelScope.launch(Dispatchers.Main) {
-                _contactKeysGood.value = Triple(
-                    _contactKeysGood.value!!.first,
-                    _contactKeysGood.value!!.second,
-                    data.size.toString()
-                )
+                // Once for contact's return from the provider, refresh
+                viewModelScope.launch(Dispatchers.Default) {
+                    // This returns null in the fragment if used before completion so no problems
+                    _contactNameMap.putAll(ContactsProviderHelper(context).buildContactsMap(it))
+
+                    // 'it' data hasn't changed, but names are now ready in recycler view
+                    if (encSwitch.value!! && _contactKeysGood.value!!.first)
+                    {
+                        _threads.postValue(CryptoHelper().deLoop(it, _contactKeysSecMap))
+                    }
+                    else
+                    {
+                        _threads.postValue(it)
+                    }
+
+                }
+
+                // Some hardware handles IO operations different; data is missed outside of Main
+                viewModelScope.launch(Dispatchers.Main) {
+                    _contactKeysGood.value = Triple(
+                        _contactKeysGood.value!!.first,
+                        _contactKeysGood.value!!.second,
+                        it.size.toString()
+                    )
+                }
             }
         }
     }
@@ -671,7 +706,7 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
         if (ecKey == null)
         {
             l.d("MVM:: $$\\NO EC KEYS YET$$")
-            ecKey = CryptoMagic.generateDHKeys()
+            ecKey = CryptoMagic.generateECKeys()
             saveDhKeys(ecKey!!)
         }
         // Init key agreement
@@ -860,5 +895,15 @@ class MainSharedViewModel(application: Application): AndroidViewModel(applicatio
             }
         }
         mapContactKeys()
+    }
+
+    /**
+     * GET A CONTACT NAME
+     */
+    fun getContact(
+        thread_id: Long
+    ):String?
+    {
+        return _contactNameMap[thread_id]
     }
 }
