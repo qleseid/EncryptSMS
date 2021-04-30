@@ -2,8 +2,10 @@
 
 package com.lolson.encryptsms.data.manager
 
+import android.app.PendingIntent
 import android.app.role.RoleManager
 import android.content.Context
+import android.content.Intent
 import android.database.Cursor
 import android.net.Uri
 import android.os.Build
@@ -13,8 +15,8 @@ import android.telephony.SmsManager
 import androidx.core.content.contentValuesOf
 import com.lolson.encryptsms.data.model.Phone
 import com.lolson.encryptsms.data.model.Sms
+import com.lolson.encryptsms.data.receiver.SendStatusReceiver
 import com.lolson.encryptsms.utility.LogMe
-
 
 class SmsManager(
     baseContext: Context)
@@ -132,6 +134,35 @@ class SmsManager(
         val succ: Boolean
         val smsM = SmsManager.getDefault()
 
+        // Pending Intents
+        val sentIntent = arrayListOf(PendingIntent.getBroadcast(
+            _context,
+            sms.thread_id.toInt(),
+        Intent(
+            SendStatusReceiver.MESSAGE_SENT,
+            Uri.parse("sentsms:${sms.date}"),
+            _context,
+            SendStatusReceiver::class.java)
+            .putExtra("com.lolson.encryptsms.msg", sms),
+        0))
+
+        val deliveredIntent = arrayListOf(PendingIntent.getBroadcast(
+            _context,
+            sms.thread_id.toInt(),
+            Intent(
+                SendStatusReceiver.MESSAGE_DELIVERED,
+                Uri.parse("sentsms:${sms.date}"),
+                _context,
+                SendStatusReceiver::class.java)
+                .putExtra("com.lolson.encryptsms.msg", sms),
+            0))
+
+        // Clean number
+        sms.address = Phone.pho(
+            null,
+            sms.address
+        ).mCleanNumber.toString()
+
         // Check if app is default; have to manage provider if so
         if (checkPermission())
             {
@@ -140,8 +171,8 @@ class SmsManager(
                     sms.address,
                     null,
                     smsM.divideMessage(sms.body),
-                    null,
-                    null
+                    sentIntent,
+                    deliveredIntent
                 )
                 succ = insertSms(uri, sms)
             }
@@ -152,8 +183,8 @@ class SmsManager(
                 sms.address,
                 null,
                 smsM.divideMessage(sms.body),
-                null,
-                null
+                sentIntent,
+                deliveredIntent
             )
             succ = true
         }
@@ -569,13 +600,15 @@ class SmsManager(
     ): Int
     {
         val values = contentValuesOf(
-            Telephony.Sms.READ to sms.read
+            Telephony.Sms.READ to sms.read,
+            Telephony.Sms.STATUS to sms.status,
+            Telephony.Sms.DATE_SENT to sms.date_sent
         )
 
         return _context.contentResolver.update(
             SMS_CONTENT_URI,
             values,
-            BaseColumns._ID + "=" + sms.id,
+            Telephony.Sms.DATE + "=" + sms.date,
             null
         )
     }

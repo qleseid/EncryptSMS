@@ -2,7 +2,7 @@ package com.lolson.encryptsms.utility
 
 import org.junit.After
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
+import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Test
 
@@ -23,16 +23,10 @@ class CryptoMagicTest
     }
 
     @Test
-    fun encrypt()
+    fun `generate ec pair`()
     {
-//        enc = CryptoMagic.encrypt(stg)
+        val ec = CryptoMagic.generateECKeys()
+        assertNotNull("EC pair generated", ec)
         assertFalse(stg == enc)
-    }
-
-    @Test
-    fun decrypt()
-    {
-//        val dec = CryptoMagic.decrypt(enc)
-        assertTrue(stg == stg)
     }
 }

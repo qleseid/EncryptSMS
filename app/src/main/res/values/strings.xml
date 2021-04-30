@@ -101,4 +101,10 @@
     <string name="_total_contacts_amount">0</string>
     <string name="splash_screen_image">Splash screen image</string>
     <string name="app_bar_invite">Invite</string>
+    <string name="concer_fragment_delivered">Delivered</string>
+    <string name="conver_fragment_delivery_error">Delivery Error</string>
+
+    <!-- Tag ids -->
+    <item name="message" type="id"/>
+    <item name="title" type="id"/>
 </resources>

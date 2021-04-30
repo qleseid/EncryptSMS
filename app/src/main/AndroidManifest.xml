@@ -72,14 +72,15 @@
             </intent-filter>
         </receiver>
 
-        <!-- Receiver for older system wide sms intents
+        <!-- Receiver for older system wide sms intents -->
         <receiver android:name="com.lolson.encryptsms.data.receiver.OldSmsReceiver"
+            android:permission="Manifest.permission.RECEIVE_SMS"
             android:enabled="true">
             <intent-filter android:priority="999">
                 <action android:name="android.provider.Telephony.SMS_RECEIVED" />
             </intent-filter>
         </receiver>
-        -->
+
 
         <!-- BroadcastReceiver that listens for incoming MMS messages -->
         <receiver android:name="com.lolson.encryptsms.data.receiver.MmsReceiver"
@@ -94,18 +95,18 @@
         <receiver android:name="com.lolson.encryptsms.data.receiver.SendStatusReceiver"
             android:exported="false">
             <intent-filter>
-                <action android:name="com.android.messaging.receiver.SendStatusReceiver.MESSAGE_SENT" />
+                <action android:name="com.lolson.encryptsms.data.receiver.SendStatusReceiver.MESSAGE_SENT" />
                 <data android:scheme="content" />
             </intent-filter>
             <intent-filter>
-                <action android:name="com.android.messaging.receiver.SendStatusReceiver.MESSAGE_DELIVERED" />
+                <action android:name="com.lolson.encryptsms.data.receiver.SendStatusReceiver.MESSAGE_DELIVERED" />
             </intent-filter>
             <intent-filter>
-                <action android:name="com.android.messaging.receiver.SendStatusReceiver.MMS_SENT" />
+                <action android:name="com.lolson.encryptsms.data.receiver.SendStatusReceiver.MMS_SENT" />
                 <data android:scheme="content" />
             </intent-filter>
             <intent-filter>
-                <action android:name="com.android.messaging.receiver.SendStatusReceiver.MMS_DOWNLOADED" />
+                <action android:name="com.lolson.encryptsms.data.receiver.SendStatusReceiver.MMS_DOWNLOADED" />
                 <data android:scheme="content" />
             </intent-filter>
         </receiver>

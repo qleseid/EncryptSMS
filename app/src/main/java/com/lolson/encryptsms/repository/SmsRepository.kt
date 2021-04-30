@@ -1,6 +1,9 @@
 package com.lolson.encryptsms.repository
 
+import android.app.role.RoleManager
 import android.content.Context
+import android.os.Build
+import android.provider.Telephony
 import com.lolson.encryptsms.data.model.Phone
 import com.lolson.encryptsms.data.model.Sms
 import com.lolson.encryptsms.database.ISmsSvc
@@ -116,11 +119,15 @@ class SmsRepository(
         msg: Sms.AppSmsShort
     ): Boolean
     {
-        var result: Boolean
-        withContext(Dispatchers.IO){
-            smsDoa.update(msg).let { result = it }
+        var result = false
+
+        if (checkDefault())
+        {
+            withContext(Dispatchers.IO) {
+                smsDoa.update(msg).let { result = it }
+            }
+            l.d("SR:: UPDATE")
         }
-        l.d("SR:: UPDATE")
         return result
     }
 
@@ -134,11 +141,32 @@ class SmsRepository(
         msg: Sms.AppSmsShort
     ): Boolean
     {
-        var result: Boolean
-        withContext(Dispatchers.IO){
-            smsDoa.delete(msg).let { result = it }
+        var result = false
+
+        if (checkDefault())
+        {
+            withContext(Dispatchers.IO) {
+                smsDoa.delete(msg).let { result = it }
+            }
+            l.d("SR:: DELETE")
         }
-        l.d("SR:: DELETE")
         return result
+    }
+
+    /**
+     * CHECK IF DEFAULT
+     */
+    private fun checkDefault(
+    ):Boolean
+    {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
+        {
+            context.getSystemService(RoleManager::class.java)
+                ?.isRoleHeld(RoleManager.ROLE_SMS) == true
+        }
+        else
+        {
+            Telephony.Sms.getDefaultSmsPackage(context) == context.packageName
+        }
     }
 }

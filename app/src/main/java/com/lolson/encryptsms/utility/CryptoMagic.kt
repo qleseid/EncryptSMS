@@ -116,35 +116,11 @@ object CryptoMagic
     /**
      * GENERATE DH KEYS
      */
-    fun generateDHKeys()
+    fun generateECKeys()
             :KeyPair
     {
         val keyGen = KeyPairGenerator.getInstance("EC")
         return keyGen.genKeyPair()
-//        pub_key = keyPair.public
-//        pvt_key = keyPair.private
-////        val pub_encode = pub_key.encoded
-//
-//        l.d("PUB GEN: ${Base64.encodeToString(pub_key.encoded, DEFAULT)}")
-//        l.d("PVT GEN: ${Base64.encodeToString(pvt_key.encoded, DEFAULT)}")
-//        l.d("PUB ENCODE: ${pub_key.encoded == pvt_key.encoded}")
-//
-//        val revKeyFac = KeyFactory.getInstance("DH")
-//        val x509 = X509EncodedKeySpec(pub_encode)
-//
-//        l.d("PUB RECEIVED: ${Base64.encodeToString(revKeyFac.generatePublic(x509).encoded,
-//            DEFAULT)}")
 
-    }
-
-    /**
-     * GENERATE RSA KEYS
-     */
-    fun generateRSAKeys()
-            :KeyPair
-    {
-        val keyGen = KeyPairGenerator.getInstance("RSA")
-        keyGen.initialize(4096)
-        return keyGen.generateKeyPair()
     }
 }
